@@ -68,9 +68,15 @@ def func(update: Update, context: CallbackContext):
             # Cancel button detected
             elif pressed_special_button.special_button_id == 1:
                 person.person_progress = ''
-                temp = back_button(person, update.effective_message.text)
                 mssg = 'عملیات لغو شد'
+                try:
+                    context.bot.sendMessage(chat_id=user.id, text=mssg, reply_markup=reply_markup)
+                except Exception as e:
+                    print(traceback.format_exc(), e)
+                    context.bot.sendMessage(chat_id=user.id, text=str(e), reply_markup=reply_markup)
+                temp = back_button(person, update.effective_message.text)
                 if temp is not None:
+                    mssg = temp['mssg']
                     reply_markup = temp['reply_keyboard_markup']
                 try:
                     context.bot.sendMessage(chat_id=user.id, text=mssg, reply_markup=reply_markup)
