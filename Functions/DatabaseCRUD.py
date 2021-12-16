@@ -521,13 +521,15 @@ def read(table: str, my_object: MyObject(), **kwargs):
     my_database = connect_database()
     my_cursor = my_database.cursor()
     try:
-        sql = f"SELECT * FROM {table} WHERE "
-        and_string = False
-        for key in kwargs:
-            if and_string:
-                sql += "AND "
-            and_string = True
-            sql += f"{key} = '{kwargs[key]}' "
+        sql = f"SELECT * FROM {table}"
+        if len(kwargs) > 0:
+            sql += ' WHERE '
+            and_string = False
+            for key in kwargs:
+                if and_string:
+                    sql += "AND "
+                and_string = True
+                sql += f"{key} = '{kwargs[key]}' "
         my_cursor.execute(sql)
         results = my_cursor.fetchall()
 
