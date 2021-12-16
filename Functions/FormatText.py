@@ -69,7 +69,8 @@ class FormatText:
                     text += space + ' ' + item + '\n'
             return text
 
-        return printing(sub_button_list)
+        result = printing(sub_button_list)
+        return result if result != '' else 'صفحه اصلی'
 # def persianNumber()
 
 # def englishNumber()

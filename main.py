@@ -55,7 +55,7 @@ def func(update: Update, context: CallbackContext):
 
             # Back button detected
             if pressed_special_button.special_button_id == 0:
-                temp = back_button(person, update.effective_message.text)
+                temp = back_button(person)
                 if temp is not None:
                     mssg = temp['mssg']
                     reply_markup = temp['reply_keyboard_markup']
@@ -74,7 +74,7 @@ def func(update: Update, context: CallbackContext):
                 except Exception as e:
                     print(traceback.format_exc(), e)
                     context.bot.sendMessage(chat_id=user.id, text=str(e), reply_markup=reply_markup)
-                temp = back_button(person, update.effective_message.text)
+                temp = back_button(person)
                 if temp is not None:
                     mssg = temp['mssg']
                     reply_markup = temp['reply_keyboard_markup']
