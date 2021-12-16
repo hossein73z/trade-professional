@@ -4,7 +4,7 @@ from Functions.FormatText import FormatText
 from Functions.KeyboardFunctions import *
 
 
-def back_button(person: Person, text: str):
+def back_button(person: Person):
     raw_buttons: list[RawButton] = read(table=raw_buttons_table, my_object=RawButton)
 
     buttons_dict = {}
@@ -25,7 +25,7 @@ def back_button(person: Person, text: str):
         person.person_last_button_id = last_button.button_id
         update_person(person)
 
-        result = {"mssg": FormatText.button_map(buttons_dict[person.person_last_button_id].button_belong_to), "reply_keyboard_markup": reply_keyboard_markup}
+        result = {"mssg": FormatText.button_map(person.person_last_button_id), "reply_keyboard_markup": reply_keyboard_markup}
         return result
     except Exception as e:
         print(Fore.RED + str(e) + Fore.RESET)
