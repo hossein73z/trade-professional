@@ -179,7 +179,6 @@ def func(update: Update, context: CallbackContext):
             elif pressed_button.button_id == 11:
                 add_exchange_button(person=person, context=context)
 
-
     # Handle Non_Button Texts
     else:
 
@@ -257,11 +256,11 @@ def main():
     dp.add_error_handler(error)
 
     # Start the Bot
-    # updater.start_webhook(listen="0.0.0.0",
-    #                       port=int(PORT),
-    #                       url_path=TOKEN,
-    #                       webhook_url=f'https://{app_name}.herokuapp.com/' + TOKEN)
-    updater.start_polling()
+    updater.start_webhook(listen="0.0.0.0",
+                          port=int(PORT),
+                          url_path=TOKEN,
+                          webhook_url=f'https://{app_name}.herokuapp.com/' + TOKEN)
+    # updater.start_polling()
 
     # Run the bot until you press Ctrl-C or the process receives SIGINT,
     # SIGTERM or SIGABRT. This should be used most of the time, since
