@@ -112,7 +112,7 @@ def add_kucoin(person: Person, update: Update, context: CallbackContext):
                 print(traceback.format_exc(), e)
                 mssg = 'اکانتی با این مشخصات API در سرور کوکوین یافت نشد. این به این معنی است که حداقل یکی از 3 مقدار وارد شده صحیح نبوده اند. عملیات افزودن صرافی کنسل شد. در صورت تمایل میتوانید با دکمه افزودن و اطلاعات صحیح، صرافی مد نظر خود را ثبت کنید'
                 person.person_progress = ''
-                temp = back_button(person, update.effective_message.text)
+                temp = back_button(person)
                 if temp is not None:
                     reply_markup = temp['reply_keyboard_markup']
 
@@ -126,7 +126,7 @@ def add_kucoin(person: Person, update: Update, context: CallbackContext):
         else:
             mssg = 'این کلید از قبل در دیتابیس وجود دارد'
             person.person_progress = ''
-            temp = back_button(person, update.effective_message.text)
+            temp = back_button(person)
             if temp is not None:
                 reply_markup = temp['reply_keyboard_markup']
             try:
@@ -152,7 +152,7 @@ def add_kucoin(person: Person, update: Update, context: CallbackContext):
 
             mssg = 'صرافی کوکوین با موفقیت ثبت شد'
             person.person_progress = ''
-            temp = back_button(person, update.effective_message.text)
+            temp = back_button(person)
             if temp is not None:
                 reply_markup = temp['reply_keyboard_markup']
             try:
@@ -164,7 +164,7 @@ def add_kucoin(person: Person, update: Update, context: CallbackContext):
         else:
             mssg = 'این کلید از قبل در دیتابیس وجود دارد'
             person.person_progress = ''
-            temp = back_button(person, update.effective_message.text)
+            temp = back_button(person)
             if temp is not None:
                 reply_markup = temp['reply_keyboard_markup']
             try:

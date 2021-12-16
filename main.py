@@ -98,15 +98,14 @@ def func(update: Update, context: CallbackContext):
             # Upgrade user with new last_button_id
             update_person(person)
 
+            try:
+                context.bot.sendMessage(chat_id=person.person_chat_id, text=mssg, reply_markup=reply_markup)
+            except Exception as e:
+                print(traceback.format_exc(), e)
+                context.bot.sendMessage(chat_id=person.person_chat_id, text=str(e), reply_markup=reply_markup)
+
             # Market Button Pressed
             if pressed_button.button_id == 1:
-
-                # Send Echo Message
-                try:
-                    context.bot.sendMessage(chat_id=user.id, text=mssg, reply_markup=reply_markup)
-                except Exception as e:
-                    print(traceback.format_exc(), e)
-                    context.bot.sendMessage(chat_id=user.id, text=str(e), reply_markup=reply_markup)
 
                 # Get list of person favorites
                 favorites: list[Favorite] = read(
@@ -171,7 +170,7 @@ def func(update: Update, context: CallbackContext):
 
             # Delete Pair Button Pressed
             elif pressed_button.button_id == 6:
-                delete_pair_button(person=person, update=update, context=context, reply_markup=reply_markup)
+                delete_pair_button(person=person, context=context, reply_markup=reply_markup)
 
             # Exchange Button Pressed
             elif pressed_button.button_id == 7:
@@ -208,7 +207,7 @@ def func(update: Update, context: CallbackContext):
             elif progress['stage'] == 'AddPair_Confirm':
                 # User confirms to add new pair
                 if update.effective_message.text == 'تأیید ✅':
-                    add_pair_confirmed(person=person, update=update, context=context)
+                    add_pair_confirmed(person=person, context=context)
 
                 # User sent new base currency
                 else:
@@ -221,7 +220,7 @@ def func(update: Update, context: CallbackContext):
             elif progress['stage'] == 'DeletePair_Confirm':
                 # User confirms to delete the pair
                 if update.effective_message.text == 'تأیید ✅':
-                    delete_pair_confirmed(person=person, update=update, context=context)
+                    delete_pair_confirmed(person=person, context=context)
 
         # Check person last pressed button
         elif person.person_last_button_id == 11:

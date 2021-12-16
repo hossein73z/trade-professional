@@ -9,7 +9,7 @@ from Functions.SpecialButtonsFunction import back_button
 from Objects.Favorite import Favorite
 
 
-def delete_pair_button(person: Person, update: Update, context: CallbackContext, reply_markup: ReplyKeyboardMarkup):
+def delete_pair_button(person: Person, context: CallbackContext, reply_markup: ReplyKeyboardMarkup):
     favorites: list[Favorite] = read(
         table=favorites_table, my_object=Favorite, person_id=person.person_id)
     if favorites is not None:
@@ -27,7 +27,7 @@ def delete_pair_button(person: Person, update: Update, context: CallbackContext,
     else:
         mssg = "شما هنوز هیچ جفت ارزی را در واچ لیست خود ثبت نکرده اید." \
                "ابتدا با دکمه های زیر حداقل یک ارز را در لیست وارد کنید"
-        temp = back_button(person, update.effective_message.text)
+        temp = back_button(person)
         if temp is not None:
             reply_markup = temp['reply_keyboard_markup']
         try:
@@ -95,7 +95,7 @@ def delete_pair_confirmation(person: Person, update: Update, context: CallbackCo
             context.bot.sendMessage(chat_id=person.person_chat_id, text=str(e), reply_markup=reply_markup)
 
 
-def delete_pair_confirmed(person: Person, update: Update, context: CallbackContext):
+def delete_pair_confirmed(person: Person, context: CallbackContext):
     reply_markup: ReplyKeyboardMarkup = ReplyKeyboardMarkup([[]])
     # Initialize Progress Stage
     try:
@@ -111,7 +111,7 @@ def delete_pair_confirmed(person: Person, update: Update, context: CallbackConte
            f' با موفقیت از لیست شما حذف شد.'
 
     person.person_progress = ""
-    temp = back_button(person, update.effective_message.text)
+    temp = back_button(person)
     if temp is not None:
         reply_markup = temp['reply_keyboard_markup']
     try:

@@ -98,7 +98,7 @@ def add_pair_confirmation(person: Person, update: Update, context: CallbackConte
     else:
         mssg = 'شما هوز صرافی ثبت نکرده اید'
         reply_markup = None
-        temp = back_button(person, update.effective_message.text)
+        temp = back_button(person)
         if temp is not None:
             reply_markup = temp['reply_keyboard_markup']
         try:
@@ -108,7 +108,7 @@ def add_pair_confirmation(person: Person, update: Update, context: CallbackConte
             context.bot.sendMessage(chat_id=person.person_chat_id, text=str(e), reply_markup=reply_markup)
 
 
-def add_pair_confirmed(person: Person, update: Update, context: CallbackContext):
+def add_pair_confirmed(person: Person, context: CallbackContext):
     reply_markup: ReplyKeyboardMarkup = ReplyKeyboardMarkup([[]])
     # Initialize Progress Stage
     try:
@@ -143,7 +143,7 @@ def add_pair_confirmed(person: Person, update: Update, context: CallbackContext)
                 mssg = f"جفت ارز {progress['value']['currency']}/{progress['value']['base']}" \
                        f" با موفقیت در واچ لیست شما قرار گرفت.\n"
                 person.person_progress = json.dumps("")
-                temp = back_button(person, update.effective_message.text)
+                temp = back_button(person)
                 if temp is not None:
                     reply_markup = temp['reply_keyboard_markup']
                 try:
@@ -179,7 +179,7 @@ def add_pair_confirmed(person: Person, update: Update, context: CallbackContext)
             else:
                 mssg = f"جفت ارز {progress['value']['currency']}/{progress['value']['base']}" \
                        f" از قبل در واچلیست شما قرار دارد"
-                temp = back_button(person, update.effective_message.text)
+                temp = back_button(person)
                 if temp is not None:
                     reply_markup = temp['reply_keyboard_markup']
                 try:
@@ -189,7 +189,7 @@ def add_pair_confirmed(person: Person, update: Update, context: CallbackContext)
                     context.bot.sendMessage(chat_id=person.person_chat_id, text=str(e), reply_markup=reply_markup)
     else:
         mssg = 'شما هوز صرافی ثبت نکرده اید'
-        temp = back_button(person, update.effective_message.text)
+        temp = back_button(person)
         if temp is not None:
             reply_markup = temp['reply_keyboard_markup']
         try:
