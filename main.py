@@ -84,29 +84,7 @@ def func(update: Update, context: CallbackContext):
                     print(traceback.format_exc(), e)
                     context.bot.sendMessage(chat_id=user.id, text=str(e), reply_markup=reply_markup)
 
-        # Handle non_special buttons
-        else:
-            # Echo the received message
-            mssg = FormatText.button_map(pressed_button.button_id)
-            # Create keyboard to be sent
-            button_array_array: list[[KeyboardButton]] = get_button_array_array(person, pressed_button.button_id)
-            reply_markup = ReplyKeyboardMarkup(
-                keyboard=button_array_array, resize_keyboard=True, one_time_keyboard=False, selective=False)
-
-            # Change user last_button_id to next level
-            person.person_last_button_id = pressed_button.button_id
-            # Upgrade user with new last_button_id
-            update_person(person)
-
-            try:
-                context.bot.sendMessage(chat_id=person.person_chat_id, text=mssg, reply_markup=reply_markup)
-            except Exception as e:
-                print(traceback.format_exc(), e)
-                context.bot.sendMessage(chat_id=person.person_chat_id, text=str(e), reply_markup=reply_markup)
-
-            # Market Button Pressed
-            if pressed_button.button_id == 1:
-
+            elif pressed_special_button.special_button_id == 2:
                 # Get list of person favorites
                 favorites: list[Favorite] = read(
                     table=favorites_table, my_object=Favorite, person_id=person.person_id)
@@ -164,8 +142,28 @@ def func(update: Update, context: CallbackContext):
                         print(traceback.format_exc(), e)
                         context.bot.sendMessage(chat_id=user.id, text=str(e))
 
+        # Handle non_special buttons
+        else:
+            # Echo the received message
+            mssg = FormatText.button_map(pressed_button.button_id)
+            # Create keyboard to be sent
+            button_array_array: list[[KeyboardButton]] = get_button_array_array(person, pressed_button.button_id)
+            reply_markup = ReplyKeyboardMarkup(
+                keyboard=button_array_array, resize_keyboard=True, one_time_keyboard=False, selective=False)
+
+            # Change user last_button_id to next level
+            person.person_last_button_id = pressed_button.button_id
+            # Upgrade user with new last_button_id
+            update_person(person)
+
+            try:
+                context.bot.sendMessage(chat_id=person.person_chat_id, text=mssg, reply_markup=reply_markup)
+            except Exception as e:
+                print(traceback.format_exc(), e)
+                context.bot.sendMessage(chat_id=person.person_chat_id, text=str(e), reply_markup=reply_markup)
+
             # Add Pair Button Pressed
-            elif pressed_button.button_id == 5:
+            if pressed_button.button_id == 5:
                 add_pair_button(person, context=context, reply_markup=reply_markup)
 
             # Delete Pair Button Pressed
