@@ -1,6 +1,7 @@
 import logging
 from os import environ
 
+import pyperclip
 from telegram.ext import Updater, MessageHandler, Filters
 
 from Functions.AddExchange import *
@@ -81,7 +82,7 @@ def func(update: Update, context: CallbackContext):
         # Handle non_special buttons
         else:
             # Echo the received message
-            mssg = update.effective_message.text
+            mssg = FormatText.button_map(pressed_button.button_id)
             # Create keyboard to be sent
             button_array_array: list[[KeyboardButton]] = get_button_array_array(person, pressed_button.button_id)
             reply_markup = ReplyKeyboardMarkup(
@@ -258,11 +259,11 @@ def main():
     dp.add_error_handler(error)
 
     # Start the Bot
-    updater.start_webhook(listen="0.0.0.0",
-                          port=int(PORT),
-                          url_path=TOKEN,
-                          webhook_url=f'https://{app_name}.herokuapp.com/' + TOKEN)
-    # updater.start_polling()
+    # updater.start_webhook(listen="0.0.0.0",
+    #                       port=int(PORT),
+    #                       url_path=TOKEN,
+    #                       webhook_url=f'https://{app_name}.herokuapp.com/' + TOKEN)
+    updater.start_polling()
 
     # Run the bot until you press Ctrl-C or the process receives SIGINT,
     # SIGTERM or SIGABRT. This should be used most of the time, since
