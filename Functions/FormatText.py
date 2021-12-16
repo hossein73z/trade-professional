@@ -37,13 +37,13 @@ class FormatText:
         return pretty_table
 
     @staticmethod
-    def button_map(button_id):
+    def button_map(received_button_id):
         buttons: list[RawButton] = read(raw_buttons_table, RawButton)
         buttons_dict = {}
         for button in buttons:
             buttons_dict[button.button_id] = button
 
-        button = buttons_dict[button_id]
+        button = buttons_dict[received_button_id]
         sub_button_list = []
         button_list = []
         belong_to = None
@@ -52,6 +52,8 @@ class FormatText:
             for button_id_array in button.button_keyboards:
                 for button_id in button_id_array:
                     button_list.append(buttons_dict[button_id].button_text)
+                    if button_id == received_button_id:
+                        button_list.append('You Are Here')
                     if button_id == belong_to:
                         button_list.append(sub_button_list)
                         sub_button_list = []
@@ -60,17 +62,23 @@ class FormatText:
             sub_button_list = button_list
             button_list = []
 
-        def printing(text_list, space='⬅'):
+        def printing(text_list, space='➖'):
             text = ''
             for item in text_list:
                 if type(item) == list:
+                    index = text.rfind('➖')
+                    text = text[:index] + "➕" + text[index + 1:] if not index < 0 else text
                     text += printing(item, '    ' + space)
+                elif item == 'You Are Here':
+                    index = text.rfind('➖')
+                    text = text[:index] + "✔" + text[index + 1:] if not index < 0 else text
                 else:
                     text += space + ' ' + item + '\n'
             return text
 
         result = printing(sub_button_list)
         return result if result != '' else 'صفحه اصلی'
+
 # def persianNumber()
 
 # def englishNumber()
