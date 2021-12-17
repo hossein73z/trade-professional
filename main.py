@@ -34,7 +34,7 @@ def func(update: Update, context: CallbackContext):
     persons = read(table=persons_table, chat_id=update.effective_user.id, my_object=Person)
     # Create user if it is not existed
     if persons is None:
-        add_person(Person(None, user.id, user.first_name, user.last_name, user.username, 0, 0, 0, 0))
+        add_person(Person(None, user.id, user.first_name, user.last_name, user.username, 0, False, 0, 0))
         persons = read(table=persons_table, chat_id=user.id, my_object=Person)
     person: Person = persons[0]
 

@@ -1,3 +1,4 @@
+import json
 import os
 
 import psycopg2
@@ -7,6 +8,8 @@ from Objects.Exchange import Exchange
 from Objects.Favorite import Favorite
 from Objects.MyObject import MyObject
 from Objects.Person import Person
+from Objects.RawButton import RawButton
+from Objects.RawSpecialButton import RawSpecialButton
 
 persons_table = 'persons'
 raw_buttons_table = 'raw_keyboard_buttons'
@@ -28,134 +31,38 @@ def connect_database():
 
 # Initialize database
 def initialize_database():
-    try:
-        my_database = connect_database()
-        my_cursor = my_database.cursor()
+    # Create persons_table
+    create_persons_table()
+    # Create raw_buttons_table
+    create_raw_buttons_table()
+    # Create raw_special_buttons_table
+    create_raw_special_buttons_table()
+    # Create favorites_table
+    create_favorites_table()
+    # Create exchanges_table
+    create_exchanges_table()
 
-        try:
-            # Create persons_table
-            try:
-                my_cursor.execute(
-                    f"""CREATE TABLE IF NOT EXISTS {persons_table} (id SERIAL PRIMARY KEY,
-                            chat_id INT DEFAULT NULL,
-                            first_name text NOT NULL,
-                            last_name text DEFAULT NULL,
-                            username text DEFAULT NULL,
-                            progress text DEFAULT NULL,
-                            is_admin BOOL NOT NULL,
-                            last_button_id INT NOT NULL,
-                            last_special_button_id INT NOT NULL
-                            );""")
-                print(f"Create Table {persons_table}:", Fore.GREEN + "Done" + Fore.RESET)
-                my_database.commit()
-            except Exception as e:
-                my_database.rollback()
-                print(f"Create {persons_table}:", Fore.RED + str(e) + Fore.RESET)
+    # Insert values into raw_buttons_table
+    add_raw_button(RawButton(0, '/start', False, None, None, '[[1,2],[3],[4]]', None))
+    add_raw_button(RawButton(1, 'بازار 💹', False, None, 0, '[[5,6],[2]]', '[[2],[0]]'))
+    add_raw_button(RawButton(2, 'معاملات ⚖️', False, None, 0, None, '[[0]]'))
+    add_raw_button(RawButton(3, 'تنظیمات ⚙️', False, None, 0, '[[7],[8],[9,10]]', '[[0]]'))
+    add_raw_button(RawButton(4, 'بخش مدیریت 🕴️', False, None, 0, None, '[[0]]'))
+    add_raw_button(RawButton(5, 'افزودن ارز جدید ➕', False, None, 1, None, '[[1]]'))
+    add_raw_button(RawButton(6, 'حذف یک جفت ارز ❌', False, None, 1, None, '[[1]]'))
+    add_raw_button(RawButton(7, 'صرافی ها', False, None, 3, '[[11,12]]', '[[0]]'))
+    add_raw_button(RawButton(8, 'انتخاب زبان', False, None, 3, None, '[[0]]'))
+    add_raw_button(RawButton(9, 'دکمه خالی 1', False, None, 3, None, '[[0]]'))
+    add_raw_button(RawButton(10, 'دکمه خالی 2', False, None, 3, None, '[[0]]'))
+    add_raw_button(RawButton(11, 'افزودن صرافی', False, None, 7, None, '[[1]]'))
+    add_raw_button(RawButton(12, 'حذف صرافی', False, None, 7, None, '[[1]]'))
 
-            # Create raw_buttons_table
-            try:
-                my_cursor.execute(
-                    f"""CREATE TABLE IF NOT EXISTS {raw_buttons_table} (id SERIAL PRIMARY KEY,
-                            text text NOT NULL,
-                            admin_key bool NOT NULL,
-                            messages text DEFAULT NULL,
-                            belong_to int DEFAULT NULL,
-                            keyboards text DEFAULT NULL,
-                            special_keyboards text DEFAULT NULL
-                            );""")
-                print(f"Create Table {raw_buttons_table}:", Fore.GREEN + "Done" + Fore.RESET)
-                my_database.commit()
-            except Exception as e:
-                my_database.rollback()
-                print(f"Create {raw_buttons_table}:", Fore.RED + str(e) + Fore.RESET)
+    # Insert values into raw_special_buttons_table
+    add_raw_special_button(RawSpecialButton(0, 'برگشت 🔙', False))
+    add_raw_special_button(RawSpecialButton(1, 'لغو ❌', False))
+    add_raw_special_button(RawSpecialButton(2, 'نمایش قیمت ها 🏷', False))
 
-            # Create raw_special_buttons_table
-            try:
-                my_cursor.execute(
-                    f"""CREATE TABLE IF NOT EXISTS {raw_special_buttons_table} (
-                            id SERIAL PRIMARY KEY,
-                            text text NOT NULL,
-                            admin_key bool NOT NULL
-                            );""")
-                print(f"Create Table {raw_special_buttons_table}:", Fore.GREEN + "Done" + Fore.RESET)
-                my_database.commit()
-            except Exception as e:
-                my_database.rollback()
-                print(f"Create {raw_special_buttons_table}:", Fore.RED + str(e) + Fore.RESET)
-
-            # Create favorites_table
-            try:
-                my_cursor.execute(
-                    f"""CREATE TABLE IF NOT EXISTS {favorites_table} (
-                            id SERIAL PRIMARY KEY,
-                            person_id int NOT NULL,
-                            exchange int NOT NULL,
-                            currency text NOT NULL,
-                            base text NOT NULL DEFAULT 'USDT'
-                            );""")
-                print(f"Create Table {favorites_table}:", Fore.GREEN + "Done" + Fore.RESET)
-                my_database.commit()
-            except Exception as e:
-                my_database.rollback()
-                print(f"Create {favorites_table}:", Fore.RED + str(e) + Fore.RESET)
-
-            # Create exchanges_table
-            try:
-                my_cursor.execute(
-                    f"""CREATE TABLE IF NOT EXISTS {exchanges_table} (
-                            id SERIAL PRIMARY KEY,
-                            person_id int NOT NULL,
-                            name text NOT NULL DEFAULT 'KuCoin',
-                            api_key text NOT NULL,
-                            api_secret text NOT NULL,
-                            api_passphrase text NOT NULL,
-                            api_sandbox bool NOT NULL
-                            );""")
-                print(f"Create Table {exchanges_table}:", Fore.GREEN + "Done" + Fore.RESET)
-                my_database.commit()
-            except Exception as e:
-                my_database.rollback()
-                print(f"Create {exchanges_table}:", Fore.RED + str(e) + Fore.RESET)
-
-            # Insert values into raw_buttons_table
-            try:
-                my_cursor.execute(
-                    f"""INSERT INTO {raw_buttons_table} (id, text, admin_key, messages, belong_to, keyboards, special_keyboards)
-                            VALUES
-                            (0, '/start', FALSE, NULL, 0, '[[1,2],[3],[4]]', NULL),
-                            (1, 'بازار 💹', FALSE, NULL, 0, '[[5,6],[2]]', '[[0]]'),
-                            (2, 'معاملات ⚖️', FALSE, NULL, 0, '[[]]', '[[0]]'),
-                            (3, 'تنظیمات ⚙️', FALSE, NULL, 0, '[[]]', '[[0]]'),
-                            (4, 'بخش مدیریت 🕴️', FALSE, NULL, 0, '[[]]', '[[0]]'),
-                            (5, 'افزودن ارز جدید ➕', FALSE, NULL, 1, NULL, '[[0]]'),
-                            (6, 'حذف یک جفت ارز ❌', FALSE, NULL, 1, NULL, '[[0]]');""")
-                print(f"Insert Values to {raw_buttons_table}:",
-                      Fore.GREEN + str(my_cursor.rowcount) + " Record Added" + Fore.RESET)
-                my_database.commit()
-            except Exception as e:
-                my_database.rollback()
-                print(f"Insert Values into {raw_buttons_table}:", Fore.RED + str(e) + Fore.RESET)
-
-            # Insert values into raw_special_buttons_table
-            try:
-                my_cursor.execute(
-                    f"""INSERT INTO {raw_special_buttons_table} (id, text, admin_key) VALUES
-                            (0, 'برگشت 🔙', FALSE);""")
-                print(f"Insert Values to {raw_special_buttons_table}:",
-                      Fore.GREEN + str(my_cursor.rowcount) + " Record Added" + Fore.RESET)
-                my_database.commit()
-            except Exception as e:
-                my_database.rollback()
-                print(f"Insert Values to {raw_special_buttons_table}:", Fore.RED + str(e) + Fore.RESET)
-
-            print("initialize_database:", Fore.GREEN + "Initialization Complete" + Fore.RESET)
-
-        except Exception as e:
-            my_database.rollback()
-            print("initialize_database:", Fore.RED + str(e) + Fore.RESET)
-
-    except Exception as e:
-        print("Database Error:", Fore.RED + str(e) + Fore.RESET)
+    print("initialize_database:", Fore.GREEN + "Initialization Complete" + Fore.RESET)
 
 
 # Delete specific table and returns nothing
@@ -181,17 +88,24 @@ def create_persons_table():
     my_database = connect_database()
     my_cursor = my_database.cursor()
 
-    my_cursor.execute(f"""CREATE TABLE IF NOT EXISTS {persons_table} (
-    id SERIAL PRIMARY KEY,
-    chat_id INT DEFAULT NULL,
-    first_name text NOT NULL,
-    last_name text DEFAULT NULL,
-    username text DEFAULT NULL,
-    progress text DEFAULT NULL,
-    is_admin BOOL NOT NULL,
-    last_button_id INT NOT NULL,
-    last_special_button_id INT NOT NULL
-    );""")
+    try:
+        my_cursor.execute(
+            f"""CREATE TABLE IF NOT EXISTS {persons_table} (
+            id SERIAL PRIMARY KEY,
+            chat_id INT DEFAULT NULL,
+            first_name text NOT NULL,
+            last_name text DEFAULT NULL,
+            username text DEFAULT NULL,
+            progress text DEFAULT NULL,
+            is_admin BOOL NOT NULL,
+            last_button_id INT NOT NULL,
+            last_special_button_id INT NOT NULL
+            );""")
+        print(f"Create Table {persons_table}:", Fore.GREEN + "Done" + Fore.RESET)
+        my_database.commit()
+    except Exception as e:
+        my_database.rollback()
+        print(f"Create {persons_table}:", Fore.RED + str(e) + Fore.RESET)
 
     my_database.commit()
     my_database.close()
@@ -206,17 +120,22 @@ def create_raw_buttons_table():
     my_database = connect_database()
     my_cursor = my_database.cursor()
 
-    my_cursor.execute(f"""CREATE TABLE IF NOT EXISTS {raw_buttons_table} (
-    id SERIAL PRIMARY KEY,
-    text text NOT NULL,
-    admin_key bool NOT NULL,
-    messages text DEFAULT NULL,
-    belong_to int DEFAULT NULL,
-    keyboards text DEFAULT NULL,
-    special_keyboards text DEFAULT NULL
-    );""")
+    try:
+        my_cursor.execute(
+            f"""CREATE TABLE IF NOT EXISTS {raw_buttons_table} (id SERIAL PRIMARY KEY,
+                    text text NOT NULL,
+                    admin_key bool NOT NULL,
+                    messages text DEFAULT NULL,
+                    belong_to int DEFAULT NULL,
+                    keyboards text DEFAULT NULL,
+                    special_keyboards text DEFAULT NULL
+                    );""")
+        print(f"Create Table {raw_buttons_table}:", Fore.GREEN + "Done" + Fore.RESET)
+        my_database.commit()
+    except Exception as e:
+        my_database.rollback()
+        print(f"Create {raw_buttons_table}:", Fore.RED + str(e) + Fore.RESET)
 
-    my_database.commit()
     my_database.close()
     my_cursor.close()
 
@@ -229,13 +148,19 @@ def create_raw_special_buttons_table():
     my_database = connect_database()
     my_cursor = my_database.cursor()
 
-    my_cursor.execute(f"""CREATE TABLE IF NOT EXISTS {raw_special_buttons_table} (
-    id SERIAL PRIMARY KEY,
-    text text NOT NULL,
-    admin_key bool NOT NULL
-    );""")
+    try:
+        my_cursor.execute(
+            f"""CREATE TABLE IF NOT EXISTS {raw_special_buttons_table} (
+                    id SERIAL PRIMARY KEY,
+                    text text NOT NULL,
+                    admin_key bool NOT NULL
+                    );""")
+        print(f"Create Table {raw_special_buttons_table}:", Fore.GREEN + "Done" + Fore.RESET)
+        my_database.commit()
+    except Exception as e:
+        my_database.rollback()
+        print(f"Create {raw_special_buttons_table}:", Fore.RED + str(e) + Fore.RESET)
 
-    my_database.commit()
     my_database.close()
     my_cursor.close()
 
@@ -248,15 +173,21 @@ def create_favorites_table():
     my_database = connect_database()
     my_cursor = my_database.cursor()
 
-    my_cursor.execute(f"""CREATE TABLE IF NOT EXISTS {favorites_table} (
-    id SERIAL PRIMARY KEY,
-    person_id int NOT NULL,
-    exchange int NOT NULL,
-    currency text NOT NULL,
-    base text NOT NULL DEFAULT 'USDT'
-    );""")
+    try:
+        my_cursor.execute(
+            f"""CREATE TABLE IF NOT EXISTS {favorites_table} (
+                    id SERIAL PRIMARY KEY,
+                    person_id int NOT NULL,
+                    exchange int NOT NULL,
+                    currency text NOT NULL,
+                    base text NOT NULL DEFAULT 'USDT'
+                    );""")
+        print(f"Create Table {favorites_table}:", Fore.GREEN + "Done" + Fore.RESET)
+        my_database.commit()
+    except Exception as e:
+        my_database.rollback()
+        print(f"Create {favorites_table}:", Fore.RED + str(e) + Fore.RESET)
 
-    my_database.commit()
     my_database.close()
     my_cursor.close()
 
@@ -269,17 +200,23 @@ def create_exchanges_table():
     my_database = connect_database()
     my_cursor = my_database.cursor()
 
-    my_cursor.execute(f"""CREATE TABLE IF NOT EXISTS {exchanges_table} (
-                            id SERIAL PRIMARY KEY,
-                            person_id int NOT NULL,
-                            name text NOT NULL DEFAULT 'KuCoin',
-                            api_key text NOT NULL,
-                            api_secret text NOT NULL,
-                            api_passphrase text NOT NULL,
-                            api_sandbox bool NOT NULL
-                            );""")
+    try:
+        my_cursor.execute(
+            f"""CREATE TABLE IF NOT EXISTS {exchanges_table} (
+                    id SERIAL PRIMARY KEY,
+                    person_id int NOT NULL,
+                    name text NOT NULL DEFAULT 'KuCoin',
+                    api_key text NOT NULL,
+                    api_secret text NOT NULL,
+                    api_passphrase text NOT NULL,
+                    api_sandbox bool NOT NULL
+                    );""")
+        print(f"Create Table {exchanges_table}:", Fore.GREEN + "Done" + Fore.RESET)
+        my_database.commit()
+    except Exception as e:
+        my_database.rollback()
+        print(f"Create {exchanges_table}:", Fore.RED + str(e) + Fore.RESET)
 
-    my_database.commit()
     my_database.close()
     my_cursor.close()
 
@@ -289,6 +226,7 @@ def add_person(person: Person):
     my_cursor = my_database.cursor()
 
     sql = f"""INSERT INTO {persons_table} (
+    id,
     chat_id,
     first_name,
     last_name,
@@ -297,27 +235,208 @@ def add_person(person: Person):
     is_admin,
     last_button_id,
     last_special_button_id
-    ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"""
+    ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)"""
 
-    val = (
-        str(person.person_chat_id),
-        str(person.person_first_name),
-        str(person.person_last_name),
-        str(person.person_username),
-        str(person.person_progress),
-        str(person.person_is_admin),
-        str(person.person_last_button_id),
-        str(person.person_last_special_button_id)
-    )
+    val = [
+        person.person_id,
+        person.person_chat_id,
+        person.person_first_name,
+        person.person_last_name,
+        person.person_username,
+        person.person_progress,
+        person.person_is_admin,
+        person.person_last_button_id,
+        person.person_last_special_button_id
+    ]
+
+    if person.person_id is None:
+        sql = sql.replace('id,', "", 1)
+        sql = sql.replace('%s, ', "", 1)
+        val.pop(0)
 
     try:
         my_cursor.execute(sql, val)
         my_database.commit()
-        print("add_person:", Fore.GREEN + str(my_cursor.rowcount) + "Record Inserted" + Fore.RESET)
+        print("add_person:", Fore.GREEN + str(my_cursor.rowcount) + " Record Inserted" + Fore.RESET)
         result = my_cursor.rowcount
 
     except Exception as e:
         print("add_person:", Fore.RED + str(e) + Fore.RESET)
+        result = None
+
+    my_cursor.close()
+    my_database.close()
+
+    return result
+
+
+def add_raw_button(button: RawButton):
+    my_database = connect_database()
+    my_cursor = my_database.cursor()
+
+    sql = f"""INSERT INTO {raw_buttons_table} (
+    id,
+    text,
+    admin_key,
+    messages,
+    belong_to,
+    keyboards,
+    special_keyboards
+    ) VALUES (%s, %s, %s, %s, %s, %s, %s)"""
+
+    val = [
+        button.button_id,
+        button.button_text,
+        button.button_admin_key,
+        button.button_messages,
+        button.button_belong_to,
+        json.dumps(button.button_keyboards),
+        json.dumps(button.button_special_keyboards)
+    ]
+
+    if button.button_id is None:
+        sql = sql.replace('id,', "", 1)
+        sql = sql.replace('%s, ', "", 1)
+        val.pop(0)
+
+    try:
+        my_cursor.execute(sql, val)
+        my_database.commit()
+        print("add_raw_button:", Fore.GREEN + str(my_cursor.rowcount) + " Record Inserted" + Fore.RESET)
+        result = my_cursor.rowcount
+
+    except Exception as e:
+        print("add_raw_button:", Fore.RED + str(e) + Fore.RESET)
+        result = None
+
+    my_cursor.close()
+    my_database.close()
+
+    return result
+
+
+def add_raw_special_button(button: RawSpecialButton):
+    my_database = connect_database()
+    my_cursor = my_database.cursor()
+
+    sql = f"""INSERT INTO {raw_special_buttons_table} (
+    id,
+    text,
+    admin_key
+    ) VALUES (%s, %s, %s)"""
+
+    val = [
+        button.special_button_id,
+        button.special_button_text,
+        button.special_button_admin_key,
+    ]
+
+    if button.special_button_id is None:
+        sql = sql.replace('id,', "", 1)
+        sql = sql.replace('%s, ', "", 1)
+        val.pop(0)
+
+    try:
+        my_cursor.execute(sql, val)
+        my_database.commit()
+        print("add_raw_special_button:", Fore.GREEN + str(my_cursor.rowcount) + " Record Inserted" + Fore.RESET)
+        result = my_cursor.rowcount
+
+    except Exception as e:
+        print("add_raw_special_button:", Fore.RED + str(e) + Fore.RESET)
+        result = None
+
+    my_cursor.close()
+    my_database.close()
+
+    return result
+
+
+def add_favorite(favorite: Favorite):
+    my_database = connect_database()
+    my_cursor = my_database.cursor()
+
+    sql = f"""INSERT INTO {favorites_table} (
+    id,
+    person_id,
+    exchange,
+    currency,
+    base
+    ) VALUES (%s, %s, %s, %s, %s)"""
+
+    val = [
+        favorite.favorite_id,
+        favorite.favorite_person_id,
+        favorite.favorite_exchange,
+        favorite.favorite_currency,
+        favorite.favorite_base
+    ]
+
+    if favorite.favorite_id is None:
+        sql = sql.replace('id,', "", 1)
+        sql = sql.replace('%s, ', "", 1)
+        val.pop(0)
+
+    try:
+        my_cursor.execute(sql, val)
+        my_database.commit()
+        print("add_favorite:", Fore.GREEN + str(my_cursor.rowcount) + " Record Inserted" + Fore.RESET)
+        result = my_cursor.rowcount
+
+    except Exception as e:
+        print("add_favorite:", Fore.RED + str(e) + Fore.RESET)
+        result = None
+
+    my_cursor.close()
+    my_database.close()
+
+    return result
+
+
+def add_exchange(exchange: Exchange):
+    my_database = connect_database()
+    my_cursor = my_database.cursor()
+
+    print(exchange.id)
+    print(exchange.name)
+    print(exchange.api_key)
+    print(exchange.api_secret)
+    print(exchange.api_passphrase)
+    print(exchange.api_sandbox)
+
+    sql = f'''INSERT INTO {exchanges_table} (
+    id,
+    person_id,
+    name,
+    api_key,
+    api_secret,
+    api_passphrase,
+    api_sandbox
+    ) VALUES (%s, %s, %s, %s, %s, %s, %s )'''
+
+    val = [
+        exchange.id,
+        exchange.person_id,
+        exchange.name,
+        exchange.api_key,
+        exchange.api_secret,
+        exchange.api_passphrase,
+        exchange.api_sandbox
+    ]
+
+    if exchange.id is None:
+        sql = sql.replace('id,', "", 1)
+        sql = sql.replace('%s, ', "", 1)
+        val.pop(0)
+
+    try:
+        my_cursor.execute(sql, val)
+        my_database.commit()
+        print("add_exchange:", Fore.GREEN + str(my_cursor.rowcount) + " Record Inserted" + Fore.RESET)
+        result = my_cursor.rowcount
+
+    except Exception as e:
+        print("add_exchange:", Fore.RED + str(e) + Fore.RESET)
         result = None
 
     my_cursor.close()
@@ -410,85 +529,6 @@ def update_exchange(exchange: Exchange):
         return None
 
 
-def add_favorite(favorite: Favorite):
-    my_database = connect_database()
-    my_cursor = my_database.cursor()
-
-    sql = f"""INSERT INTO {favorites_table} (
-    person_id,
-    exchange,
-    currency,
-    base
-    ) VALUES (%s, %s, %s, %s)"""
-
-    val = (
-        str(favorite.favorite_person_id),
-        str(favorite.favorite_exchange),
-        str(favorite.favorite_currency),
-        str(favorite.favorite_base)
-    )
-
-    try:
-        my_cursor.execute(sql, val)
-        my_database.commit()
-        print("add_favorite:", Fore.GREEN + str(my_cursor.rowcount) + "Record Inserted" + Fore.RESET)
-        result = my_cursor.rowcount
-
-    except Exception as e:
-        print("add_favorite:", Fore.RED + str(e) + Fore.RESET)
-        result = None
-
-    my_cursor.close()
-    my_database.close()
-
-    return result
-
-
-def add_exchange(exchange: Exchange):
-    my_database = connect_database()
-    my_cursor = my_database.cursor()
-
-    print(exchange.id)
-    print(exchange.name)
-    print(exchange.api_key)
-    print(exchange.api_secret)
-    print(exchange.api_passphrase)
-    print(exchange.api_sandbox)
-
-    sql = f'''INSERT INTO {exchanges_table} (
-    person_id,
-    name,
-    api_key,
-    api_secret,
-    api_passphrase,
-    api_sandbox
-    ) VALUES (%s, %s, %s, %s, %s, %s )'''
-
-    val = (
-        str(exchange.person_id),
-        str(exchange.name),
-        str(exchange.api_key),
-        str(exchange.api_secret),
-        str(exchange.api_passphrase),
-        str(exchange.api_sandbox)
-    )
-
-    try:
-        my_cursor.execute(sql, val)
-        my_database.commit()
-        print("add_exchange:", Fore.GREEN + str(my_cursor.rowcount) + "Record Inserted" + Fore.RESET)
-        result = my_cursor.rowcount
-
-    except Exception as e:
-        print("add_exchange:", Fore.RED + str(e) + Fore.RESET)
-        result = None
-
-    my_cursor.close()
-    my_database.close()
-
-    return result
-
-
 def delete(table, **kwargs):
     my_database = connect_database()
     my_cursor = my_database.cursor()
@@ -503,7 +543,7 @@ def delete(table, **kwargs):
 
         my_cursor.execute(sql)
         my_database.commit()
-        print(Fore.GREEN + str(my_cursor.rowcount) + "Record(s) Deleted" + Fore.RESET)
+        print(Fore.GREEN + str(my_cursor.rowcount) + " Record(s) Deleted" + Fore.RESET)
 
         result = my_cursor.rowcount
 
