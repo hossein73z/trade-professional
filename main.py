@@ -89,21 +89,21 @@ def func(update: Update, context: CallbackContext):
                 # Get list of person favorites
                 favorites: list[Favorite] = read(
                     table=favorites_table, my_object=Favorite, person_id=person.person_id)
+                exchanges: list[Exchange] = read(
+                    table=exchanges_table, my_object=Exchange, person_id=person.person_id, name='KuCoin')
 
-                # Chek if the list is not empty
-                if favorites is not None:
+                # Chek if user has registered exchange
+                if exchanges is not None:
 
                     # Send Waiting Message
                     try:
-                        message = context.bot.sendMessage(chat_id=user.id, text='در حال دریافت اطلاعات')
+                        message: Message = context.bot.sendMessage(chat_id=user.id, text='در حال دریافت اطلاعات')
                     except Exception as e:
                         print(traceback.format_exc(), e)
                         message: Message = context.bot.sendMessage(chat_id=user.id, text=str(e))
 
                     # Create table from user favorites
-                    exchanges = read(table=exchanges_table, my_object=Exchange, person_id=person.person_id,
-                                     name='KuCoin')
-                    if exchanges is not None:
+                    if favorites is not None:
                         # Read exchange
                         exchange: Exchange = exchanges[0]
                         client = Client(
@@ -125,18 +125,19 @@ def func(update: Update, context: CallbackContext):
                             context.bot.edit_message_text(
                                 text=str(e), chat_id=user.id, message_id=message.message_id)
                     else:
-                        mssg = 'No Exchange Registered'
+                        mssg = "هیچ ارزی در واچ لیست شما ثبت نشده. از دکمه های زیر برای ثبت ارز در واچلیست استفاده کنید"
                         try:
                             context.bot.edit_message_text(
                                 text=mssg, chat_id=user.id, message_id=message.message_id, parse_mode='Markdown')
                         except Exception as e:
                             print(traceback.format_exc(), e)
                             context.bot.edit_message_text(
-                                text=str(e), chat_id=user.id, message_id=message.message_id)
+                                text=str(e), chat_id=user.id, message_id=message.message_id, parse_mode='Markdown')
 
-                # Send error if user has no favorite pair registered
+                # Send error if user has no exchange registered
                 else:
-                    mssg = "هیچ ارزی در واچ لیست شما ثبت نشده. از دکمه های زیر برای ثبت ارز در واچلیست استفاده کنید"
+                    mssg = 'شما هنوز هیچ صرافی ای ثبت نکرده اید. ' \
+                           'برای این کار به صفحه اصلی برگشته و از قسمت تنظیمات وارد بخش صرافی ها شوید'
                     try:
                         context.bot.sendMessage(chat_id=user.id, text=mssg)
                     except Exception as e:

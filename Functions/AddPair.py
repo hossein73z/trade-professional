@@ -1,5 +1,3 @@
-import json
-
 from kucoin.client import Client
 from telegram import ReplyKeyboardMarkup, ReplyKeyboardRemove, Update, KeyboardButton
 from telegram.ext import CallbackContext
@@ -12,21 +10,34 @@ from Objects.Person import Person
 
 
 def add_pair_button(person: Person, context: CallbackContext, reply_markup: ReplyKeyboardMarkup):
-    # Request user to send crypto symbol
-    mssg = 'نماد ارز مد نظر خود را ارسال کنید.مثال: ETH'
-    try:
-        context.bot.sendMessage(chat_id=person.person_chat_id, text=mssg, reply_markup=reply_markup)
-    except Exception as e:
-        print(e)
-        context.bot.sendMessage(chat_id=person.person_chat_id, text=str(e), reply_markup=reply_markup)
+    exchanges = read(table=exchanges_table, my_object=Exchange, person_id=person.person_id, name='KuCoin')
+    if exchanges is not None:
+        # Request user to send crypto symbol
+        mssg = 'نماد ارز مد نظر خود را ارسال کنید.مثال: ETH'
+        try:
+            context.bot.sendMessage(chat_id=person.person_chat_id, text=mssg, reply_markup=reply_markup)
+        except Exception as e:
+            print(e)
+            context.bot.sendMessage(chat_id=person.person_chat_id, text=str(e), reply_markup=reply_markup)
 
-    # Change person progress to ((AddPair)) stage
-    person.person_progress = json.dumps({'stage': 'AddPair', 'value': None})
-    update_person(person)
+        # Change person progress to ((AddPair)) stage
+        person.person_progress = json.dumps({'stage': 'AddPair', 'value': None})
+        update_person(person)
+    else:
+        mssg = 'شما هنوز هیچ صرافی ای ثبت نکرده اید. ' \
+               'برای این کار به صفحه اصلی برگشته و از قسمت تنظیمات وارد بخش صرافی ها شوید'
+        reply_markup = None
+        temp = back_button(person)
+        if temp is not None:
+            reply_markup = temp['reply_keyboard_markup']
+        try:
+            context.bot.sendMessage(chat_id=person.person_chat_id, text=mssg, reply_markup=reply_markup)
+        except Exception as e:
+            print(e)
+            context.bot.sendMessage(chat_id=person.person_chat_id, text=str(e), reply_markup=reply_markup)
 
 
 def add_pair_confirmation(person: Person, update: Update, context: CallbackContext):
-
     exchanges = read(table=exchanges_table, my_object=Exchange, person_id=person.person_id, name='KuCoin')
     if exchanges is not None:
         # Extract currency symbol from user text
@@ -136,7 +147,7 @@ def add_pair_confirmed(person: Person, context: CallbackContext):
             if favorites is None:
                 add_favorite(Favorite(None,
                                       person.person_id,
-                                      1,
+                                      exchange.id,
                                       progress['value']['currency'],
                                       progress['value']['base']))
 
@@ -163,7 +174,8 @@ def add_pair_confirmed(person: Person, context: CallbackContext):
                     table=favorites_table, my_object=Favorite, person_id=person.person_id)
 
                 mssg = FormatText.create_table_for_pairs(
-                    client, ['Pair', 'Price'], favorites, {'Price': 'l'}).get_string()
+                    client, ['Pair', 'Price'], favorites,
+                    {'Price': 'l'}).get_string() if favorites is not None else 'خطایی در دریافت اطلاعات پیش آمده'
                 mssg = f'`{mssg}`'
 
                 try:
