@@ -37,10 +37,10 @@ def initialize_database():
     create_raw_buttons_table()
     # Create raw_special_buttons_table
     create_raw_special_buttons_table()
-    # Create favorites_table
-    create_favorites_table()
     # Create exchanges_table
     create_exchanges_table()
+    # Create favorites_table
+    create_favorites_table()
 
     # Insert values into raw_buttons_table
     add_raw_button(RawButton(0, '/start', False, None, None, '[[1,2],[3],[4]]', None))
@@ -165,33 +165,6 @@ def create_raw_special_buttons_table():
     my_cursor.close()
 
 
-def create_favorites_table():
-    """
-    Creates table and returns nothing
-    """
-
-    my_database = connect_database()
-    my_cursor = my_database.cursor()
-
-    try:
-        my_cursor.execute(
-            f"""CREATE TABLE IF NOT EXISTS {favorites_table} (
-                    id SERIAL PRIMARY KEY,
-                    person_id int NOT NULL,
-                    exchange int NOT NULL,
-                    currency text NOT NULL,
-                    base text NOT NULL DEFAULT 'USDT'
-                    );""")
-        print(f"Create Table {favorites_table}:", Fore.GREEN + "Done" + Fore.RESET)
-        my_database.commit()
-    except Exception as e:
-        my_database.rollback()
-        print(f"Create {favorites_table}:", Fore.RED + str(e) + Fore.RESET)
-
-    my_database.close()
-    my_cursor.close()
-
-
 def create_exchanges_table():
     """
     Creates table and returns nothing
@@ -216,6 +189,81 @@ def create_exchanges_table():
     except Exception as e:
         my_database.rollback()
         print(f"Create {exchanges_table}:", Fore.RED + str(e) + Fore.RESET)
+
+    try:
+        my_cursor.execute(
+            f"""ALTER TABLE {exchanges_table}
+            ADD CONSTRAINT person_foreign_key
+            FOREIGN KEY (person_id)
+            REFERENCES public.{persons_table}(id)
+            ON DELETE CASCADE
+            ON UPDATE CASCADE
+            DEFERRABLE
+            INITIALLY IMMEDIATE;""")
+        my_database.commit()
+        print(f"Create Table {exchanges_table}:", Fore.GREEN + "person_foreign_key Added" + Fore.RESET)
+    except Exception as e:
+        my_database.rollback()
+        print(f"Create Table {exchanges_table}:", Fore.RED + str(e) + Fore.RESET)
+
+    my_database.close()
+    my_cursor.close()
+
+
+def create_favorites_table():
+    """
+    Creates table and returns nothing
+    """
+
+    my_database = connect_database()
+    my_cursor = my_database.cursor()
+
+    try:
+        my_cursor.execute(
+            f"""CREATE TABLE IF NOT EXISTS {favorites_table} (
+                    id SERIAL PRIMARY KEY,
+                    person_id int NOT NULL,
+                    exchange int NOT NULL,
+                    currency text NOT NULL,
+                    base text NOT NULL DEFAULT 'USDT'
+                    );""")
+        print(f"Create Table {favorites_table}:", Fore.GREEN + "Done" + Fore.RESET)
+        my_database.commit()
+    except Exception as e:
+        my_database.rollback()
+        print(f"Create {favorites_table}:", Fore.RED + str(e) + Fore.RESET)
+
+    try:
+        my_cursor.execute(
+            f"""ALTER TABLE {favorites_table}
+            ADD CONSTRAINT person_foreign_key
+            FOREIGN KEY (person_id)
+            REFERENCES public.{persons_table}(id)
+            ON DELETE CASCADE
+            ON UPDATE CASCADE
+            DEFERRABLE
+            INITIALLY IMMEDIATE;""")
+        my_database.commit()
+        print(f"Create Table {favorites_table}:", Fore.GREEN + "person_foreign_key Added" + Fore.RESET)
+    except Exception as e:
+        my_database.rollback()
+        print(f"Create Table {favorites_table}:", Fore.RED + str(e) + Fore.RESET)
+
+    try:
+        my_cursor.execute(
+            f"""ALTER TABLE {favorites_table}
+            ADD CONSTRAINT exchange_foreign_key
+            FOREIGN KEY (exchange)
+            REFERENCES public.{exchanges_table}(id)
+            ON DELETE CASCADE
+            ON UPDATE CASCADE
+            DEFERRABLE
+            INITIALLY IMMEDIATE;""")
+        my_database.commit()
+        print(f"Create Table {favorites_table}:", Fore.GREEN + "exchange_foreign_key Added" + Fore.RESET)
+    except Exception as e:
+        my_database.rollback()
+        print(f"Create Table {favorites_table}:", Fore.RED + str(e) + Fore.RESET)
 
     my_database.close()
     my_cursor.close()
@@ -550,6 +598,15 @@ def delete(table, **kwargs):
     except Exception as e:
         print("delete_person:", Fore.RED + str(e) + Fore.RESET)
         result = None
+
+    # try except block below is not tested
+    try:
+        my_cursor.execute("ALTER SEQUENCE " + table + "_id_seq RESTART WITH 1")
+        my_database.commit()
+        print(f'Table {table} Sequence Reset:', Fore.GREEN + " Successful" + Fore.RESET)
+
+    except Exception as e:
+        print(f'Table {table} Sequence Reset:', Fore.RED + str(e) + Fore.RESET)
 
     my_cursor.close()
     my_database.close()

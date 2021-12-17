@@ -84,6 +84,7 @@ def func(update: Update, context: CallbackContext):
                     print(traceback.format_exc(), e)
                     context.bot.sendMessage(chat_id=user.id, text=str(e), reply_markup=reply_markup)
 
+            # Prices button detected
             elif pressed_special_button.special_button_id == 2:
                 # Get list of person favorites
                 favorites: list[Favorite] = read(
