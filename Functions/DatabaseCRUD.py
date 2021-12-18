@@ -4,6 +4,7 @@ import os
 import psycopg2
 from colorama import Fore
 
+from Objects import Order
 from Objects.Exchange import Exchange
 from Objects.Favorite import Favorite
 from Objects.MyObject import MyObject
@@ -16,6 +17,7 @@ raw_buttons_table = 'raw_keyboard_buttons'
 raw_special_buttons_table = 'raw_special_keyboard_buttons'
 favorites_table = "favorites"
 exchanges_table = "exchanges"
+orders_table = "orders"
 
 
 # Create Connection to database
@@ -41,6 +43,8 @@ def initialize_database():
     create_exchanges_table()
     # Create favorites_table
     create_favorites_table()
+    # Create orders_table
+    create_orders_table()
 
     # Insert values into raw_buttons_table
     add_raw_button(RawButton(0, '/start', False, None, None, '[[1,2],[3],[4]]', None))
@@ -269,6 +273,70 @@ def create_favorites_table():
     my_cursor.close()
 
 
+def create_orders_table():
+    """
+    Creates table and returns nothing
+    """
+
+    my_database = connect_database()
+    my_cursor = my_database.cursor()
+
+    try:
+        my_cursor.execute(
+            f"""CREATE TABLE IF NOT EXISTS {orders_table} (
+                    id SERIAL PRIMARY KEY,
+                    person_id int NOT NULL,
+                    exchange_order_id text NOT NULL,
+                    exchange int NOT NULL,
+                    currency text NOT NULL,
+                    base text NOT NULL DEFAULT 'USDT',
+                    price float NOt NULL,
+                    amount float NOT NULL,
+                    value float NOT NULL,
+                    is_active bool Not NULL
+                    );""")
+        print(f"Create Table {orders_table}:", Fore.GREEN + "Done" + Fore.RESET)
+        my_database.commit()
+    except Exception as e:
+        my_database.rollback()
+        print(f"Create {orders_table}:", Fore.RED + str(e) + Fore.RESET)
+
+    try:
+        my_cursor.execute(
+            f"""ALTER TABLE {orders_table}
+            ADD CONSTRAINT person_foreign_key
+            FOREIGN KEY (person_id)
+            REFERENCES public.{persons_table}(id)
+            ON DELETE CASCADE
+            ON UPDATE CASCADE
+            DEFERRABLE
+            INITIALLY IMMEDIATE;""")
+        my_database.commit()
+        print(f"Create Table {orders_table}:", Fore.GREEN + "person_foreign_key Added" + Fore.RESET)
+    except Exception as e:
+        my_database.rollback()
+        print(f"Create Table {orders_table}:", Fore.RED + str(e) + Fore.RESET)
+
+    try:
+        my_cursor.execute(
+            f"""ALTER TABLE {orders_table}
+            ADD CONSTRAINT exchange_foreign_key
+            FOREIGN KEY (exchange)
+            REFERENCES public.{exchanges_table}(id)
+            ON DELETE CASCADE
+            ON UPDATE CASCADE
+            DEFERRABLE
+            INITIALLY IMMEDIATE;""")
+        my_database.commit()
+        print(f"Create Table {orders_table}:", Fore.GREEN + "exchange_foreign_key Added" + Fore.RESET)
+    except Exception as e:
+        my_database.rollback()
+        print(f"Create Table {orders_table}:", Fore.RED + str(e) + Fore.RESET)
+
+    my_database.close()
+    my_cursor.close()
+
+
 def add_person(person: Person):
     my_database = connect_database()
     my_cursor = my_database.cursor()
@@ -400,47 +468,6 @@ def add_raw_special_button(button: RawSpecialButton):
     return result
 
 
-def add_favorite(favorite: Favorite):
-    my_database = connect_database()
-    my_cursor = my_database.cursor()
-
-    sql = f"""INSERT INTO {favorites_table} (
-    id,
-    person_id,
-    exchange,
-    currency,
-    base
-    ) VALUES (%s, %s, %s, %s, %s)"""
-
-    val = [
-        favorite.favorite_id,
-        favorite.favorite_person_id,
-        favorite.favorite_exchange,
-        favorite.favorite_currency,
-        favorite.favorite_base
-    ]
-
-    if favorite.favorite_id is None:
-        sql = sql.replace('id,', "", 1)
-        sql = sql.replace('%s, ', "", 1)
-        val.pop(0)
-
-    try:
-        my_cursor.execute(sql, val)
-        my_database.commit()
-        print("add_favorite:", Fore.GREEN + str(my_cursor.rowcount) + " Record Inserted" + Fore.RESET)
-        result = my_cursor.rowcount
-
-    except Exception as e:
-        print("add_favorite:", Fore.RED + str(e) + Fore.RESET)
-        result = None
-
-    my_cursor.close()
-    my_database.close()
-
-    return result
-
-
 def add_exchange(exchange: Exchange):
     my_database = connect_database()
     my_cursor = my_database.cursor()
@@ -485,6 +512,98 @@ def add_exchange(exchange: Exchange):
 
     except Exception as e:
         print("add_exchange:", Fore.RED + str(e) + Fore.RESET)
+        result = None
+
+    my_cursor.close()
+    my_database.close()
+
+    return result
+
+
+def add_favorite(favorite: Favorite):
+    my_database = connect_database()
+    my_cursor = my_database.cursor()
+
+    sql = f"""INSERT INTO {favorites_table} (
+    id,
+    person_id,
+    exchange,
+    currency,
+    base
+    ) VALUES (%s, %s, %s, %s, %s)"""
+
+    val = [
+        favorite.favorite_id,
+        favorite.favorite_person_id,
+        favorite.favorite_exchange,
+        favorite.favorite_currency,
+        favorite.favorite_base
+    ]
+
+    if favorite.favorite_id is None:
+        sql = sql.replace('id,', "", 1)
+        sql = sql.replace('%s, ', "", 1)
+        val.pop(0)
+
+    try:
+        my_cursor.execute(sql, val)
+        my_database.commit()
+        print("add_favorite:", Fore.GREEN + str(my_cursor.rowcount) + " Record Inserted" + Fore.RESET)
+        result = my_cursor.rowcount
+
+    except Exception as e:
+        print("add_favorite:", Fore.RED + str(e) + Fore.RESET)
+        result = None
+
+    my_cursor.close()
+    my_database.close()
+
+    return result
+
+
+def add_order(order: Order):
+    my_database = connect_database()
+    my_cursor = my_database.cursor()
+
+    sql = f"""INSERT INTO {orders_table} (
+    id,
+    person_id,
+    exchange_order_id,
+    exchange,
+    currency,
+    base,
+    price,
+    amount,
+    value,
+    is_active
+    ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"""
+
+    val = [
+        order.order_id,
+        order.order_person_id,
+        order.order_exchange_order_id,
+        order.order_exchange,
+        order.order_currency,
+        order.order_base,
+        order.order_price,
+        order.order_amount,
+        order.order_value,
+        order.order_is_active
+    ]
+
+    if order.order_id is None:
+        sql = sql.replace('id,', "", 1)
+        sql = sql.replace('%s, ', "", 1)
+        val.pop(0)
+
+    try:
+        my_cursor.execute(sql, val)
+        my_database.commit()
+        print("add_order:", Fore.GREEN + str(my_cursor.rowcount) + " Record Inserted" + Fore.RESET)
+        result = my_cursor.rowcount
+
+    except Exception as e:
+        print("add_order:", Fore.RED + str(e) + Fore.RESET)
         result = None
 
     my_cursor.close()
