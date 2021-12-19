@@ -193,6 +193,10 @@ def func(update: Update, context: CallbackContext):
         if person.person_last_button_id == 5:
 
             # Check user stage
+            if progress['stage'] == 'AddPair_exchange':
+                add_pair_exchange(person=person, context=context, update=update)
+
+            # Check user stage
             if progress['stage'] == 'AddPair':
                 add_pair_confirmation(person=person, update=update, context=context)
 

@@ -25,7 +25,8 @@ def add_kucoin(person: Person, update: Update, context: CallbackContext):
     button_array_array = get_button_array_array(person, person.person_last_button_id)
     reply_markup = ReplyKeyboardMarkup(button_array_array, True)
     if progress['value']['api_auth']['api_key'] is None:
-        exchanges = read(table=exchanges_table, my_object=Exchange, api_key=update.effective_message.text, name='KuCoin')
+        exchanges = read(
+            table=exchanges_table, my_object=Exchange, api_key=update.effective_message.text, name='KuCoin')
         if exchanges is None:
             progress['value']['api_auth']['api_key'] = update.effective_message.text
             person.person_progress = json.dumps(progress)
@@ -51,7 +52,8 @@ def add_kucoin(person: Person, update: Update, context: CallbackContext):
         person.person_progress = json.dumps(progress)
         update_person(person)
 
-        mssg = 'رمز API خود را نیز ارسال کنید. دقت کنید که این رمز را در زمان ساخت API تعیین کرده اید و با رمز اکنت یا رمز ترید شما متفاوت است'
+        mssg = 'رمز API خود را نیز ارسال کنید. ' \
+               'دقت کنید که این رمز را در زمان ساخت API تعیین کرده اید و با رمز اکنت یا رمز ترید شما متفاوت است'
         try:
             context.bot.sendMessage(chat_id=person.person_chat_id, text=mssg, reply_markup=reply_markup)
         except Exception as e:
@@ -105,12 +107,17 @@ def add_kucoin(person: Person, update: Update, context: CallbackContext):
                 balance = balance / float(prices['USDT'])
                 balance = round(balance, 2)
 
-                mssg = f'اکانت مورد نظر با موفقیت در سرور کوکوین یافت شد. مقدار کل دارای تقریبی این اکانت در لحظه ارسال این پیام تقریبا معادل {balance} تتر میباشد. در صورت تایید لطفا برای ثبت نهایی کلید تایید را فشار دهید.'
+                mssg = f'اکانت مورد نظر با موفقیت در سرور کوکوین یافت شد. ' \
+                       f'مقدار کل دارای تقریبی این اکانت در لحظه ارسال این پیام تقریبا معادل ' \
+                       f'{balance} تتر میباشد. در صورت تایید لطفا برای ثبت نهایی کلید تایید را فشار دهید.'
                 reply_markup.keyboard.insert(0, [KeyboardButton(text='تأیید ✅')])
 
             except Exception as e:
                 print(traceback.format_exc(), e)
-                mssg = 'اکانتی با این مشخصات API در سرور کوکوین یافت نشد. این به این معنی است که حداقل یکی از 3 مقدار وارد شده صحیح نبوده اند. عملیات افزودن صرافی کنسل شد. در صورت تمایل میتوانید با دکمه افزودن و اطلاعات صحیح، صرافی مد نظر خود را ثبت کنید'
+                mssg = 'اکانتی با این مشخصات API در سرور کوکوین یافت نشد. ' \
+                       'این به این معنی است که حداقل یکی از 3 مقدار وارد شده صحیح نبوده اند. ' \
+                       'عملیات افزودن صرافی کنسل شد. ' \
+                       'در صورت تمایل میتوانید با دکمه افزودن و اطلاعات صحیح، صرافی مد نظر خود را ثبت کنید'
                 person.person_progress = ''
                 temp = back_button(person)
                 if temp is not None:
@@ -234,5 +241,3 @@ def add_kucoin(person: Person, update: Update, context: CallbackContext):
         except Exception as e:
             print(traceback.format_exc(), e)
             context.bot.sendMessage(chat_id=person.person_chat_id, text=str(e))
-
-
