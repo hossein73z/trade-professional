@@ -293,7 +293,8 @@ def create_orders_table():
                     price float NOt NULL,
                     amount float NOT NULL,
                     value float NOT NULL,
-                    is_active bool Not NULL
+                    is_active bool Not NULL,
+                    datetime text NOT NULL
                     );""")
         print(f"Create Table {orders_table}:", Fore.GREEN + "Done" + Fore.RESET)
         my_database.commit()
@@ -575,8 +576,9 @@ def add_order(order: Order):
     price,
     amount,
     value,
-    is_active
-    ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"""
+    is_active,
+    datetime
+    ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"""
 
     val = [
         order.order_id,
@@ -588,6 +590,7 @@ def add_order(order: Order):
         order.order_price,
         order.order_amount,
         order.order_value,
+        order.order_datetime,
         order.order_is_active
     ]
 

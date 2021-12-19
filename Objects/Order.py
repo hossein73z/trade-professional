@@ -12,5 +12,6 @@ class Order(MyObject):
         self.order_price = values[6]
         self.order_amount = values[7]
         self.order_value = values[8]
-        self.order_is_active = values[9]
+        self.order_datetime = values[9]
+        self.order_is_active = values[10]
         # self.order_trade = values[10]
