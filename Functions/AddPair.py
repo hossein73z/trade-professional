@@ -159,7 +159,7 @@ def add_pair_confirmation(person: Person, update: Update, context: CallbackConte
                 {'stage': 'AddPair_Confirm', 'value': None})
             update_person(person)
 
-            button_array_array = [[KeyboardButton(text='لغو ❌')]]
+            button_array_array = get_button_array_array(person, person.person_last_button_id)
             reply_markup = ReplyKeyboardMarkup(
                 button_array_array, resize_keyboard=True, one_time_keyboard=False, selective=False)
             mssg = 'نماد مورد نظر در صرافی کوکوین یافت نشد. لطفا دوباره امتحان کنید.'
@@ -337,9 +337,13 @@ def add_base(person: Person, update: Update, context: CallbackContext):
 
         else:
             context.bot.deleteMessage(chat_id=person.person_chat_id, message_id=message.message_id)
+
+            button_array_array = get_button_array_array(person, person.person_last_button_id)
+            reply_markup = ReplyKeyboardMarkup(
+                button_array_array, resize_keyboard=True, one_time_keyboard=False, selective=False)
             mssg = 'جفت ارز مورد نظر در صرافی کوکوین یافت نشد. لطفا ارز پایه ی دیگری را امتحان کنید.'
             try:
-                context.bot.sendMessage(chat_id=person.person_chat_id, text=mssg)
+                context.bot.sendMessage(chat_id=person.person_chat_id, text=mssg, reply_markup=reply_markup)
             except Exception as e:
                 print(e)
-                context.bot.sendMessage(chat_id=person.person_chat_id, text=str(e))
+                context.bot.sendMessage(chat_id=person.person_chat_id, text=str(e), reply_markup=reply_markup)
