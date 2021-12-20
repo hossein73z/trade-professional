@@ -18,7 +18,7 @@ def add_pair_button(person: Person, context: CallbackContext, reply_markup: Repl
     exchanges: list[Exchange] = read(table=exchanges_table, my_object=Exchange, person_id=person.person_id)
     if exchanges is not None:
         # Change person progress to ((AddPair_exchange)) stage
-        person.person_progress = json.dumps({'stage': 'AddPair_exchange', 'value': None})
+        person.person_progress = json.dumps({'stage': 'AddPair_exchange', 'value': {}})
         update_person(person)
 
         button_array_array = reply_markup.keyboard
@@ -52,13 +52,23 @@ def add_pair_button(person: Person, context: CallbackContext, reply_markup: Repl
 
 
 def add_pair_exchange(person: Person, update: Update, context: CallbackContext):
+    # Initialize Progress Stage
+    try:
+        progress: dict = json.loads(person.person_progress)
+    except Exception as e:
+        progress = {}
+        print('Person Progress To JSON Error: ', e)
+
     # Create keyboard to be sent
     button_array_array: list[[KeyboardButton]] = get_button_array_array(person, person.person_last_button_id)
     reply_markup = ReplyKeyboardMarkup(
         keyboard=button_array_array, resize_keyboard=True, one_time_keyboard=False, selective=False)
 
     name = "Nothing"
-    if update.effective_message.text == 'کوکوین (KuCoin)':
+    text = update.effective_message.text
+    text_lower = text.replace(" ", "")
+    text_lower = text_lower.lower()
+    if text == 'کوکوین (KuCoin)' or text_lower == 'کوکوین' or text_lower == 'کوکین' or text_lower == 'kucoin':
         name = 'KuCoin'
     exchanges = read(table=exchanges_table, my_object=Exchange, person_id=person.person_id, name=name)
 
@@ -72,8 +82,11 @@ def add_pair_exchange(person: Person, update: Update, context: CallbackContext):
             context.bot.sendMessage(chat_id=person.person_chat_id, text=str(e), reply_markup=reply_markup)
 
         # Change person progress to ((AddPair)) stage
-        person.person_progress = json.dumps({'stage': 'AddPair', 'value': {'exchange': name}})
+        progress['stage'] = 'AddPair'
+        progress['value']['exchange'] = name
+        person.person_progress = json.dumps(progress)
         update_person(person)
+
     else:
         mssg = 'صرافی مد نظر شما یافت نشد'
         button_array_array = reply_markup.keyboard
@@ -108,8 +121,10 @@ def add_pair_confirmation(person: Person, update: Update, context: CallbackConte
         text = text.replace(" ", "")
         text = text.upper()
 
-        # Create ReplyMarkup
-        reply_markup = ReplyKeyboardRemove()
+        # Create keyboard to be sent
+        button_array_array: list[[KeyboardButton]] = get_button_array_array(person, person.person_last_button_id)
+        reply_markup = ReplyKeyboardMarkup(
+            keyboard=button_array_array, resize_keyboard=True, one_time_keyboard=False, selective=False)
         mssg = 'در حال دریافت اطلاعات از سرور کوکوین. لطفا منتظر بمانید'
         try:
             message = context.bot.sendMessage(chat_id=person.person_chat_id, text=mssg, reply_markup=reply_markup)
@@ -132,6 +147,7 @@ def add_pair_confirmation(person: Person, update: Update, context: CallbackConte
             # Update user progress to new stage and with value
             progress['stage'] = 'AddPair_Confirm'
             progress['value']['currency'] = text
+            progress['value']['base'] = 'USDT'
             person.person_progress = json.dumps(progress)
             update_person(person)
 
@@ -155,10 +171,6 @@ def add_pair_confirmation(person: Person, update: Update, context: CallbackConte
                 print(e)
                 context.bot.sendMessage(chat_id=person.person_chat_id, text=str(e), reply_markup=reply_markup)
         else:
-            # Update user progress to new stage and with value
-            person.person_progress = json.dumps(
-                {'stage': 'AddPair_Confirm', 'value': None})
-            update_person(person)
 
             button_array_array = get_button_array_array(person, person.person_last_button_id)
             reply_markup = ReplyKeyboardMarkup(
@@ -184,7 +196,11 @@ def add_pair_confirmation(person: Person, update: Update, context: CallbackConte
 
 
 def add_pair_confirmed(person: Person, context: CallbackContext):
-    reply_markup: ReplyKeyboardMarkup = ReplyKeyboardMarkup([[]])
+    # Create keyboard to be sent
+    button_array_array: list[[KeyboardButton]] = get_button_array_array(person, person.person_last_button_id)
+    reply_markup = ReplyKeyboardMarkup(
+        keyboard=button_array_array, resize_keyboard=True, one_time_keyboard=False, selective=False)
+
     # Initialize Progress Stage
     try:
         progress = json.loads(person.person_progress)
@@ -196,7 +212,8 @@ def add_pair_confirmed(person: Person, context: CallbackContext):
     favorites = read(table=favorites_table, my_object=Favorite,
                      person_id=person.person_id, currency=progress['value']['currency'], base=progress['value']['base'])
 
-    exchanges = read(table=exchanges_table, my_object=Exchange, person_id=person.person_id, name='KuCoin')
+    exchanges = read(
+        table=exchanges_table, my_object=Exchange, person_id=person.person_id, name=progress['value']['exchange'])
     if exchanges is not None:
         exchange: Exchange = exchanges[0]
         client = Client(
@@ -253,6 +270,8 @@ def add_pair_confirmed(person: Person, context: CallbackContext):
 
             # The requested pair is already in user watchlist
             else:
+                person.person_progress = json.dumps('')
+                update_person(person)
                 mssg = f"جفت ارز {progress['value']['currency']}/{progress['value']['base']}" \
                        f" از قبل در واچلیست شما قرار دارد"
                 temp = back_button(person)
@@ -291,7 +310,8 @@ def add_base(person: Person, update: Update, context: CallbackContext):
         print(e)
         message = context.bot.sendMessage(chat_id=person.person_chat_id, text=str(e))
 
-    exchanges = read(table=exchanges_table, my_object=Exchange, person_id=person.person_id, name='KuCoin')
+    exchanges = read(
+        table=exchanges_table, my_object=Exchange, person_id=person.person_id, name=progress['value']['exchange'])
     if exchanges is not None:
         exchange: Exchange = exchanges[0]
         client = Client(
@@ -304,14 +324,13 @@ def add_base(person: Person, update: Update, context: CallbackContext):
         text = update.effective_message.text
         text = text.replace(" ", "")
         text = text.upper()
-        progress['value']['base'] = text
-        ticker = client.get_ticker(f"{progress['value']['currency']}-{progress['value']['base']}")
+        ticker = client.get_ticker(f"{progress['value']['currency']}-{text}")
 
         # Check if the symbol exists on the exchange
         if ticker is not None:
 
             # Prepare confirmation message to user
-            mssg = f'جفت ارز {progress["value"]["currency"]}/{progress["value"]["base"]}' \
+            mssg = f'جفت ارز {progress["value"]["currency"]}/{text}' \
                    f' در صرافی کوکوین یافت شد. قیمت حال حاضر برابر {ticker["price"]}' \
                    f' میباشد. درصورت موافقت برای ثبت این جفت ارز، دکمه ((تأیید ✅)) را فشار دهید.\n' \
                    f'همچنین میتوانید درصورت تمایل برای تغییر ارز پایه به ارزی دیگر، ' \
@@ -322,6 +341,7 @@ def add_base(person: Person, update: Update, context: CallbackContext):
 
             # Update user progress to new stage and with value
             progress['stage'] = 'AddPair_Confirm'
+            progress['value']['base'] = text
             person.person_progress = json.dumps(progress)
             update_person(person)
 
