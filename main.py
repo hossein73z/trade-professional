@@ -255,7 +255,22 @@ def func(update: Update, context: CallbackContext):
 
         elif person.person_last_button_id == 14:
             if progress['stage'] == 'AddOrder_exchange':
-                pass
+                add_order_exchange(person, update, context)
+            elif progress['stage'] == 'AddOrder_currency':
+                add_order_currency(person, update, context)
+            elif progress['stage'] == 'AddOrder_pair':
+                if update.effective_message.text == 'تأیید ✅':
+                    add_order_pair(person=person, context=context)
+                else:
+                    add_order_base(person, update, context)
+            elif progress['stage'] == 'AddOrder_side':
+                add_order_side(person, update, context)
+            elif progress['stage'] == 'AddOrder_type':
+                add_order_type(person, update, context)
+            elif progress['stage'] == 'AddOrder_price':
+                add_order_price(person, update, context)
+            elif progress['stage'] == 'AddOrder_value':
+                add_order_value(person, update, context)
 
         # Most default reaction for texts which is a simple error
         else:
