@@ -79,6 +79,30 @@ class FormatText:
         result = printing(sub_button_list)
         return result if result != '' else 'صفحه اصلی'
 
-# def persianNumber()
+    @staticmethod
+    def persian_number(text: str):
+        text = text.replace('0', '۰')
+        text = text.replace('1', '۱')
+        text = text.replace('2', '۲')
+        text = text.replace('3', '۳')
+        text = text.replace('4', '۴')
+        text = text.replace('5', '۵')
+        text = text.replace('6', '۶')
+        text = text.replace('7', '۷')
+        text = text.replace('8', '۸')
+        text = text.replace('9', '۹')
+        return text
 
-# def englishNumber()
+    @staticmethod
+    def english_number(text: str):
+        text = text.replace('۰', '0')
+        text = text.replace('۱', '1')
+        text = text.replace('۲', '2')
+        text = text.replace('۳', '3')
+        text = text.replace('۴', '4')
+        text = text.replace('۵', '5')
+        text = text.replace('۶', '6')
+        text = text.replace('۷', '7')
+        text = text.replace('۸', '8')
+        text = text.replace('۹', '9')
+        return text
