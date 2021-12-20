@@ -130,8 +130,9 @@ def add_pair_confirmation(person: Person, update: Update, context: CallbackConte
         if ticker is not None:
 
             # Update user progress to new stage and with value
-            person.person_progress = json.dumps(
-                {'stage': 'AddPair_Confirm', 'value': {'currency': text, 'base': 'USDT'}})
+            progress['stage'] = 'AddPair_Confirm'
+            progress['value']['currency'] = text
+            person.person_progress = json.dumps(progress)
             update_person(person)
 
             # Prepare confirmation message to user
@@ -320,9 +321,8 @@ def add_base(person: Person, update: Update, context: CallbackContext):
                 button_array_array, resize_keyboard=True, one_time_keyboard=False, selective=False)
 
             # Update user progress to new stage and with value
-            person.person_progress = json.dumps(
-                {'stage': 'AddPair_Confirm',
-                 'value': {'currency': progress['value']['currency'], 'base': progress['value']['base']}})
+            progress['stage'] = 'AddPair_Confirm'
+            person.person_progress = json.dumps(progress)
             update_person(person)
 
             # delete formerly sent message

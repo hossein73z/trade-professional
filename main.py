@@ -7,6 +7,7 @@ from Functions.AddExchange import *
 from Functions.DeletePair import *
 from Functions.AddPair import *
 from Functions.DatabaseCRUD import *
+from Functions.AddOrder import add_order_button
 from Functions.KeyboardFunctions import get_pressed_button, get_button_array_array
 from Functions.SpecialButtonsFunction import back_button
 
@@ -176,8 +177,36 @@ def func(update: Update, context: CallbackContext):
             elif pressed_button.button_id == 7:
                 exchange_button(person=person, context=context, reply_markup=reply_markup)
 
+            # Add Exchange Button Pressed
             elif pressed_button.button_id == 11:
                 add_exchange_button(person=person, context=context)
+
+            # Orders Button Pressed
+            elif pressed_button.button_id == 13:
+                exchanges: list[Exchange] = read(
+                    table=exchanges_table, my_object=Exchange, person_id=person.person_id)
+
+                # Chek if user has registered exchange
+                if exchanges is not None:
+                    pass
+
+                # Send error if user has no exchange registered
+                else:
+                    mssg = 'شما هنوز هیچ صرافی ای ثبت نکرده اید. ' \
+                           'برای این کار به صفحه اصلی برگشته و از قسمت تنظیمات وارد بخش صرافی ها شوید'
+                    temp = back_button(person)
+                    if temp is not None:
+                        mssg = temp['mssg']
+                        reply_markup = temp['reply_keyboard_markup']
+                    try:
+                        context.bot.sendMessage(chat_id=user.id, text=mssg, reply_markup=reply_markup)
+                    except Exception as e:
+                        print(traceback.format_exc(), e)
+                        context.bot.sendMessage(chat_id=user.id, text=str(e), reply_markup=reply_markup)
+
+            # Add Order Button Pressed
+            elif pressed_button.button_id == 14:
+                add_order_button(person=person, context=context, reply_markup=reply_markup)
 
     # Handle Non_Button Texts
     else:
@@ -226,6 +255,10 @@ def func(update: Update, context: CallbackContext):
             elif progress['stage'] == 'AddExchange_API':
                 if progress['value']['exchange'] == 'KuCoin':
                     add_exchange_kucoin(person, update, context)
+
+        elif person.person_last_button_id == 14:
+            if progress['stage'] == 'AddOrder_exchange':
+                pass
 
         # Most default reaction for texts which is a simple error
         else:
