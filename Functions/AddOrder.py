@@ -5,6 +5,7 @@ from telegram import ReplyKeyboardMarkup, KeyboardButton, Update, ReplyKeyboardR
 from telegram.ext import CallbackContext
 
 from Functions.DatabaseCRUD import read, exchanges_table, update_person
+from Functions.FormatText import FormatText
 from Functions.KeyboardFunctions import get_button_array_array
 from Functions.SpecialButtonsFunction import back_button
 from Objects.Exchange import Exchange
@@ -357,10 +358,6 @@ def add_order_type(person: Person, update: Update, context: CallbackContext):
             exchange = read(
                 exchanges_table, Exchange, person_id=person.person_id, name=progress['value']['exchange'])[0]
             if exchange is not None:
-                progress['value']['type'] = Client.ORDER_LIMIT
-                progress['stage'] = 'AddOrder_price'
-                person.person_progress = json.dumps(progress)
-                update_person(person)
 
                 client = Client(
                     api_key=exchange.api_key,
@@ -370,12 +367,15 @@ def add_order_type(person: Person, update: Update, context: CallbackContext):
                 ticker = client.get_ticker(f"{progress['value']['currency']}-{progress['value']['base']}")
 
                 if ticker is not None:
+                    progress['stage'] = 'AddOrder_price'
+                    progress['value']['type'] = Client.ORDER_LIMIT
+                    person.person_progress = json.dumps(progress)
+                    update_person(person)
+
                     mssg = f'در چه قیمتی میخواهید سفارش را قرار دهید؟ ' \
                            f'قیمت جفت ارز مورد نظر در این لحظه برابر {ticker["price"]} میباشد'
                     # Create keyboard to be sent
-                    button_array_array: list[[KeyboardButton]] = get_button_array_array(person,
-                                                                                        person.person_last_button_id)
-                    button_array_array.insert(0, [KeyboardButton(text='خرید'), KeyboardButton(text='فروش')])
+                    button_array_array = get_button_array_array(person, person.person_last_button_id)
                     reply_markup = ReplyKeyboardMarkup(
                         keyboard=button_array_array, resize_keyboard=True, one_time_keyboard=False, selective=False)
                     try:
@@ -404,7 +404,69 @@ def add_order_type(person: Person, update: Update, context: CallbackContext):
 
 
 def add_order_price(person: Person, update: Update, context: CallbackContext):
-    pass
+    # Initialize Progress Stage
+    try:
+        progress = json.loads(person.person_progress)
+    except Exception as e:
+        progress = None
+        print('Person Progress To JSON Error: ', e)
+
+    text = update.effective_message.text
+    text = text.replace(" ", "")
+    text = FormatText.english_number(text=text)
+
+    price = 0
+    try:
+        price = float(text)
+    except Exception as e:
+        print(e)
+
+    if price > 0:
+        progress['stage'] = 'AddOrder_value'
+        progress['value']['price'] = price
+        person.person_progress = json.dumps(progress)
+        update_person(person)
+        currency = progress['value']['currency']
+        base = progress['value']['base']
+
+        if progress['value']['side'] == Client.SIDE_SELL:
+            mssg = 'چه مقدار %s میخواهید بفروشید؟ ' \
+                   'لطفا مقدار %s را برای فروش ارسال کنید. ' \
+                   'دقت کنید که مقدار خود ارزی که میخواهید بفروشید را ارسال کنید، ' \
+                   'نه مقدار دلار یا ارز پایه. برای مثال برای فروش 0.2 %s در قیمت وارد شده که معادل %s% s میشود، ' \
+                   'تنها عدد 0.2 را ارسال کنید' \
+                   % (currency, currency, currency, str(price * 0.2), base)
+
+        elif progress['value']['side'] == Client.SIDE_BUY:
+            mssg = 'به چه اندازه %s میخواهید بخرید؟ ' \
+                   'لطفا مقدار %s را برای خرید ارسال کنید. ' \
+                   'دقت کنید که مقدار ارز پایه را برای خرید وارد کنید، ' \
+                   'نه مقدار %s. برای مثال برای خرید 0.2 %s که معادل %s% s میشود، تنها عدد %s را وارد کنید ' \
+                   % (currency, base, currency, currency, str(price * 0.2), base, str(price * 0.2))
+        else:
+            mssg = 'خطای ناشناخته پیش آمده. لطافا کلید لغو را زده و از ابتدا شروع کنید'
+
+        # Create keyboard to be sent
+        button_array_array = get_button_array_array(person, person.person_last_button_id)
+        reply_markup = ReplyKeyboardMarkup(
+            keyboard=button_array_array, resize_keyboard=True, one_time_keyboard=False, selective=False)
+        try:
+            context.bot.sendMessage(chat_id=person.person_chat_id, text=mssg, reply_markup=reply_markup)
+        except Exception as e:
+            print(e)
+            context.bot.sendMessage(chat_id=person.person_chat_id, text=str(e), reply_markup=reply_markup)
+
+    else:
+        mssg = "مبلغ وارد شده صحیح نیست. لطفا فقط عدد ارسال کنید"
+        # Create keyboard to be sent
+        button_array_array = get_button_array_array(person, person.person_last_button_id)
+        reply_markup = ReplyKeyboardMarkup(
+            keyboard=button_array_array, resize_keyboard=True, one_time_keyboard=False, selective=False)
+        try:
+            context.bot.sendMessage(chat_id=person.person_chat_id, text=mssg, reply_markup=reply_markup)
+        except Exception as e:
+            print(e)
+            context.bot.sendMessage(chat_id=person.person_chat_id, text=str(e), reply_markup=reply_markup)
 
 
 def add_order_value(person: Person, update: Update, context: CallbackContext):
