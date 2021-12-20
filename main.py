@@ -6,6 +6,7 @@ from telegram.ext import Updater, MessageHandler, Filters
 from Functions.AddExchange import *
 from Functions.DeletePair import *
 from Functions.AddPair import *
+from Functions.AddOrder import *
 from Functions.DatabaseCRUD import *
 from Functions.AddOrder import add_order_button
 from Functions.KeyboardFunctions import get_pressed_button, get_button_array_array
@@ -220,21 +221,17 @@ def func(update: Update, context: CallbackContext):
 
         # Check person last pressed button
         if person.person_last_button_id == 5:
-
             # Check user stage
             if progress['stage'] == 'AddPair_exchange':
                 add_pair_exchange(person=person, context=context, update=update)
-
             # Check user stage
             if progress['stage'] == 'AddPair':
                 add_pair_confirmation(person=person, update=update, context=context)
-
             # Check user stage
             elif progress['stage'] == 'AddPair_Confirm':
                 # User confirms to add new pair
                 if update.effective_message.text == 'تأیید ✅':
                     add_pair_confirmed(person=person, context=context)
-
                 # User sent new base currency
                 else:
                     add_base(person=person, update=update, context=context)
