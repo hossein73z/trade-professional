@@ -60,6 +60,9 @@ def initialize_database():
     add_raw_button(RawButton(10, 'دکمه خالی 2', False, None, 3, None, '[[0]]'))
     add_raw_button(RawButton(11, 'افزودن صرافی', False, None, 7, None, '[[1]]'))
     add_raw_button(RawButton(12, 'حذف صرافی', False, None, 7, None, '[[1]]'))
+    add_raw_button(RawButton(13, 'سفارشات', False, None, 2, '[[14,15]]', '[[0]]'))
+    add_raw_button(RawButton(14, 'افزودن صفارش جدید', False, None, 13, None, '[[1]]'))
+    add_raw_button(RawButton(15, 'لغو سفارش', False, None, 13, None, '[[1]]'))
 
     # Insert values into raw_special_buttons_table
     add_raw_special_button(RawSpecialButton(0, 'برگشت 🔙', False))

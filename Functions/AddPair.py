@@ -72,7 +72,7 @@ def add_pair_exchange(person: Person, update: Update, context: CallbackContext):
             context.bot.sendMessage(chat_id=person.person_chat_id, text=str(e), reply_markup=reply_markup)
 
         # Change person progress to ((AddPair)) stage
-        person.person_progress = json.dumps({'stage': 'AddPair', 'value': None})
+        person.person_progress = json.dumps({'stage': 'AddPair', 'value': {'exchange': name}})
         update_person(person)
     else:
         mssg = 'صرافی مد نظر شما یافت نشد'
@@ -93,7 +93,15 @@ def add_pair_exchange(person: Person, update: Update, context: CallbackContext):
 
 
 def add_pair_confirmation(person: Person, update: Update, context: CallbackContext):
-    exchanges = read(table=exchanges_table, my_object=Exchange, person_id=person.person_id, name='KuCoin')
+    # Initialize Progress Stage
+    try:
+        progress = json.loads(person.person_progress)
+    except Exception as e:
+        progress = None
+        print('Person Progress To JSON Error: ', e)
+
+    exchanges = read(
+        table=exchanges_table, my_object=Exchange, person_id=person.person_id, name=progress['value']['exchange'])
     if exchanges is not None:
         # Extract currency symbol from user text
         text = update.effective_message.text
