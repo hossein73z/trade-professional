@@ -46,10 +46,14 @@ def initialize_database():
     # Create orders_table
     create_orders_table()
 
+    # Delete items from raw_buttons_table
+    for i in range(16):
+        delete(table=raw_buttons_table, id=i)
+
     # Insert values into raw_buttons_table
     add_raw_button(RawButton(0, '/start', False, None, None, '[[1,2],[3],[4]]', None))
     add_raw_button(RawButton(1, 'بازار 💹', False, None, 0, '[[5,6],[2]]', '[[2],[0]]'))
-    add_raw_button(RawButton(2, 'معاملات ⚖️', False, None, 0, None, '[[0]]'))
+    add_raw_button(RawButton(2, 'معاملات ⚖️', False, None, 0, '[[13]]', '[[0]]'))
     add_raw_button(RawButton(3, 'تنظیمات ⚙️', False, None, 0, '[[7],[8],[9,10]]', '[[0]]'))
     add_raw_button(RawButton(4, 'بخش مدیریت 🕴️', False, None, 0, None, '[[0]]'))
     add_raw_button(RawButton(5, 'افزودن ارز جدید ➕', False, None, 1, None, '[[1]]'))
@@ -61,8 +65,12 @@ def initialize_database():
     add_raw_button(RawButton(11, 'افزودن صرافی', False, None, 7, None, '[[1]]'))
     add_raw_button(RawButton(12, 'حذف صرافی', False, None, 7, None, '[[1]]'))
     add_raw_button(RawButton(13, 'سفارشات', False, None, 2, '[[14,15]]', '[[0]]'))
-    add_raw_button(RawButton(14, 'افزودن صفارش جدید', False, None, 13, None, '[[1]]'))
+    add_raw_button(RawButton(14, 'افزودن سفارش جدید', False, None, 13, None, '[[1]]'))
     add_raw_button(RawButton(15, 'لغو سفارش', False, None, 13, None, '[[1]]'))
+
+    # Delete items from raw_special_buttons_table
+    for i in range(3):
+        delete(table=raw_special_buttons_table, id=i)
 
     # Insert values into raw_special_buttons_table
     add_raw_special_button(RawSpecialButton(0, 'برگشت 🔙', False))
@@ -706,22 +714,27 @@ def delete(table, **kwargs):
     my_database = connect_database()
     my_cursor = my_database.cursor()
 
-    try:
-        sql = f"DELETE FROM {table} WHERE "
+    sql = f"DELETE FROM {table}"
+    conditions = ''
+    if len(kwargs) > 0:
+        sql += ' WHERE '
         and_string = False
         for key in kwargs:
             if and_string:
-                sql += "AND "
-            sql += f"{key} = {kwargs[key]} "
+                conditions += "AND "
+            and_string = True
+            conditions += f"{key} = '{kwargs[key]}' "
+    sql += conditions
 
+    try:
         my_cursor.execute(sql)
         my_database.commit()
-        print(Fore.GREEN + str(my_cursor.rowcount) + " Record(s) Deleted" + Fore.RESET)
+        print("delete:", Fore.GREEN + f"{str(my_cursor.rowcount)} Record(s) With {conditions} Deleted" + Fore.RESET)
 
         result = my_cursor.rowcount
 
     except Exception as e:
-        print("delete_person:", Fore.RED + str(e) + Fore.RESET)
+        print("delete:", Fore.RED + str(e) + Fore.RESET)
         result = None
 
     # try except block below is not tested
@@ -742,16 +755,21 @@ def delete(table, **kwargs):
 def read(table: str, my_object: MyObject(), **kwargs):
     my_database = connect_database()
     my_cursor = my_database.cursor()
+
+    sql = f"SELECT * FROM {table}"
+    conditions = ''
+    if len(kwargs) > 0:
+        sql += ' WHERE '
+        and_string = False
+        for key in kwargs:
+            if and_string:
+                conditions += "AND "
+            and_string = True
+            conditions += f"{key} = '{kwargs[key]}' "
+    sql += conditions
+
+    result = None
     try:
-        sql = f"SELECT * FROM {table}"
-        if len(kwargs) > 0:
-            sql += ' WHERE '
-            and_string = False
-            for key in kwargs:
-                if and_string:
-                    sql += "AND "
-                and_string = True
-                sql += f"{key} = '{kwargs[key]}' "
         my_cursor.execute(sql)
         results = my_cursor.fetchall()
 
@@ -763,10 +781,10 @@ def read(table: str, my_object: MyObject(), **kwargs):
         result = items
         my_cursor.close()
         my_database.close()
-        return None if len(result) < 1 else result
 
     except Exception as e:
         print("read:", Fore.RED + str(e) + Fore.RESET)
-        my_cursor.close()
-        my_database.close()
-        return None
+
+    my_cursor.close()
+    my_database.close()
+    return None if len(result) < 1 else result
