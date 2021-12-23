@@ -5,3 +5,4 @@ Functions/Exchanges/__pycache__/
 Objects/__pycache__/
 /Texts/
 /Test.py
+/Functions/Exchanges/KuCoin/Websocket.py

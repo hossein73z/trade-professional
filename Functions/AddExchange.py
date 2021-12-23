@@ -1,4 +1,3 @@
-import json
 import traceback
 
 from kucoin.client import Client
@@ -6,7 +5,7 @@ from telegram import ReplyKeyboardMarkup, Update, KeyboardButton, Message
 from telegram.ext import CallbackContext
 
 from Functions.DatabaseCRUD import *
-from Functions.Exchanges.RegisterKuCoinAPIToDatabase import add_kucoin
+from Functions.Exchanges.KuCoin.RegisterKuCoinAPIToDatabase import add_kucoin
 from Objects.Exchange import Exchange
 from Objects.Person import Person
 from Functions.FormatText import FormatText
