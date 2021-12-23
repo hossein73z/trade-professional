@@ -1,7 +1,7 @@
 import json
 
 from kucoin.client import Client
-from telegram import ReplyKeyboardMarkup, KeyboardButton, Update, ReplyKeyboardRemove, Message
+from telegram import ReplyKeyboardMarkup, KeyboardButton, Update
 from telegram.ext import CallbackContext
 
 from Functions.DatabaseCRUD import read, exchanges_table, update_person

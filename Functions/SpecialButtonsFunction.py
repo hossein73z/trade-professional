@@ -1,7 +1,11 @@
+from colorama import Fore
 from telegram import ReplyKeyboardMarkup
 
+from Functions.DatabaseCRUD import update_person, read, raw_buttons_table
 from Functions.FormatText import FormatText
-from Functions.KeyboardFunctions import *
+from Functions.KeyboardFunctions import get_button_array_array
+from Objects.Person import Person
+from Objects.RawButton import RawButton
 
 
 def back_button(person: Person):
@@ -25,7 +29,8 @@ def back_button(person: Person):
         person.person_last_button_id = last_button.button_id
         update_person(person)
 
-        result = {"mssg": FormatText.button_map(person.person_last_button_id), "reply_keyboard_markup": reply_keyboard_markup}
+        result = {"mssg": FormatText.button_map(person.person_last_button_id),
+                  "reply_keyboard_markup": reply_keyboard_markup}
         return result
     except Exception as e:
         print(Fore.RED + str(e) + Fore.RESET)

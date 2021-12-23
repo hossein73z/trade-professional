@@ -1,6 +1,8 @@
+from colorama import Fore
 from telegram import KeyboardButton
 
-from Functions.DatabaseCRUD import *
+from Functions.DatabaseCRUD import read, raw_buttons_table, raw_special_buttons_table
+from Objects.Person import Person
 from Objects.RawButton import RawButton
 from Objects.RawSpecialButton import RawSpecialButton
 

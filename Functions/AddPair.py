@@ -1,14 +1,14 @@
 import json
 
 from kucoin.client import Client
-from telegram import ReplyKeyboardMarkup, ReplyKeyboardRemove, Update, KeyboardButton
+from telegram import ReplyKeyboardMarkup, Update, KeyboardButton
 from telegram.ext import CallbackContext
 
 from Functions.FormatText import FormatText
-from Functions.DatabaseCRUD import read, update_person, add_favorite
-from Functions.DatabaseCRUD import exchanges_table, favorites_table
 from Functions.KeyboardFunctions import get_button_array_array
 from Functions.SpecialButtonsFunction import back_button
+from Functions.DatabaseCRUD import read, update_person, add_favorite
+from Functions.DatabaseCRUD import exchanges_table, favorites_table
 from Objects.Exchange import Exchange
 from Objects.Favorite import Favorite
 from Objects.Person import Person

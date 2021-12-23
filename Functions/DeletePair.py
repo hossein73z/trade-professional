@@ -1,12 +1,14 @@
 import json
 
+from colorama import Fore
 from telegram import Update, ReplyKeyboardMarkup, KeyboardButton
 from telegram.ext import CallbackContext
 
-from Functions.DatabaseCRUD import *
+from Functions.DatabaseCRUD import favorites_table, read, update_person, delete
 from Functions.KeyboardFunctions import get_button_array_array
 from Functions.SpecialButtonsFunction import back_button
 from Objects.Favorite import Favorite
+from Objects.Person import Person
 
 
 def delete_pair_button(person: Person, context: CallbackContext, reply_markup: ReplyKeyboardMarkup):

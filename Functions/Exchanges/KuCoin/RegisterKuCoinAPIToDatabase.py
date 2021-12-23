@@ -6,9 +6,9 @@ from kucoin.client import Client
 from telegram import Update, ReplyKeyboardMarkup, ReplyKeyboardRemove, Message, KeyboardButton
 from telegram.ext import CallbackContext
 
-from Functions.SpecialButtonsFunction import back_button, add_exchange
+from Functions.SpecialButtonsFunction import back_button
 from Functions.KeyboardFunctions import get_button_array_array
-from Functions.DatabaseCRUD import update_person, read, exchanges_table
+from Functions.DatabaseCRUD import update_person, read, exchanges_table, add_exchange
 from Functions.FormatText import FormatText
 from Objects.Person import Person
 from Objects.Exchange import Exchange

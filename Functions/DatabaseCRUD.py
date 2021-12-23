@@ -4,7 +4,7 @@ import os
 import psycopg2
 from colorama import Fore
 
-from Objects import Order
+from Objects.Order import Order
 from Objects.Exchange import Exchange
 from Objects.Favorite import Favorite
 from Objects.MyObject import MyObject

@@ -2,6 +2,7 @@
 venv
 Functions/__pycache__/
 Functions/Exchanges/__pycache__/
+Functions/Exchanges/KuCoin/__pycache__/
 Objects/__pycache__/
 /Texts/
 /Test.py

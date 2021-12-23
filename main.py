@@ -1,17 +1,23 @@
+import json
+import traceback
 import logging
+
+from colorama import Fore
+from kucoin.client import Client
+from telegram import Message, Update, KeyboardButton, ReplyKeyboardMarkup
+from telegram.ext import Updater, MessageHandler, Filters, Dispatcher, CallbackContext
 from os import environ
 
-from telegram.ext import Updater, MessageHandler, Filters
+import Functions.AddOrder as AddOrder
+import Functions.AddExchange as AddExchange
+import Functions.DeletePair as DeletePair
+import Functions.AddPair as AddPair
+import Functions.KeyboardFunctions as KeyboardFunctions
+import Functions.SpecialButtonsFunction as SpecialButtonsFunction
+from Functions.DatabaseCRUD import read, initialize_database, add_person, update_person
+from Functions.DatabaseCRUD import persons_table, favorites_table, exchanges_table
 
-from Functions.AddExchange import *
-from Functions.DeletePair import *
-from Functions.AddPair import *
-from Functions.AddOrder import *
-from Functions.DatabaseCRUD import *
-from Functions.AddOrder import add_order_button
-from Functions.KeyboardFunctions import get_pressed_button, get_button_array_array
-from Functions.SpecialButtonsFunction import back_button
-
+from Objects.Exchange import Exchange
 from Objects.Favorite import Favorite
 from Objects.Person import Person
 from Objects.RawButton import RawButton
@@ -45,19 +51,19 @@ def func(update: Update, context: CallbackContext):
     reply_markup = None
 
     # Create pressed_button object from received text and user level
-    pressed_button_dict = get_pressed_button(person=person, text=update.effective_message.text)
+    pressed_button_dict = KeyboardFunctions.get_pressed_button(person=person, text=update.effective_message.text)
 
     # Check if received text is a button
     if pressed_button_dict is not None:
         pressed_button: RawButton = pressed_button_dict["pressed_button"]
 
-        # Check if pressed button is special
+        # Check if pressed button is special -----------------------------------------------------------------
         if pressed_button_dict["is_special"]:
             pressed_special_button = pressed_button_dict['pressed_button']
 
             # Back button detected
             if pressed_special_button.special_button_id == 0:
-                temp = back_button(person)
+                temp = SpecialButtonsFunction.back_button(person)
                 if temp is not None:
                     mssg = temp['mssg']
                     reply_markup = temp['reply_keyboard_markup']
@@ -76,7 +82,7 @@ def func(update: Update, context: CallbackContext):
                 except Exception as e:
                     print(traceback.format_exc(), e)
                     context.bot.sendMessage(chat_id=user.id, text=str(e), reply_markup=reply_markup)
-                temp = back_button(person)
+                temp = SpecialButtonsFunction.back_button(person)
                 if temp is not None:
                     mssg = temp['mssg']
                     reply_markup = temp['reply_keyboard_markup']
@@ -146,12 +152,13 @@ def func(update: Update, context: CallbackContext):
                         print(traceback.format_exc(), e)
                         context.bot.sendMessage(chat_id=user.id, text=str(e))
 
-        # Handle non_special buttons
+        # Handle non_special buttons--------------------------------------------------------------------------
         else:
             # Echo the received message
             mssg = FormatText.button_map(pressed_button.button_id)
             # Create keyboard to be sent
-            button_array_array: list[[KeyboardButton]] = get_button_array_array(person, pressed_button.button_id)
+            button_array_array: list[[KeyboardButton]] = KeyboardFunctions.get_button_array_array(
+                person, pressed_button.button_id)
             reply_markup = ReplyKeyboardMarkup(
                 keyboard=button_array_array, resize_keyboard=True, one_time_keyboard=False, selective=False)
 
@@ -168,19 +175,19 @@ def func(update: Update, context: CallbackContext):
 
             # Add Pair Button Pressed
             if pressed_button.button_id == 5:
-                add_pair_button(person, context=context, reply_markup=reply_markup)
+                AddPair.add_pair_button(person, context=context, reply_markup=reply_markup)
 
             # Delete Pair Button Pressed
             elif pressed_button.button_id == 6:
-                delete_pair_button(person=person, context=context, reply_markup=reply_markup)
+                DeletePair.delete_pair_button(person=person, context=context, reply_markup=reply_markup)
 
             # Exchange Button Pressed
             elif pressed_button.button_id == 7:
-                exchange_button(person=person, context=context, reply_markup=reply_markup)
+                AddExchange.exchange_button(person=person, context=context, reply_markup=reply_markup)
 
             # Add Exchange Button Pressed
             elif pressed_button.button_id == 11:
-                add_exchange_button(person=person, context=context)
+                AddExchange.add_exchange_button(person=person, context=context)
 
             # Orders Button Pressed
             elif pressed_button.button_id == 13:
@@ -195,7 +202,7 @@ def func(update: Update, context: CallbackContext):
                 else:
                     mssg = 'شما هنوز هیچ صرافی ای ثبت نکرده اید. ' \
                            'برای این کار به صفحه اصلی برگشته و از قسمت تنظیمات وارد بخش صرافی ها شوید'
-                    temp = back_button(person)
+                    temp = SpecialButtonsFunction.back_button(person)
                     if temp is not None:
                         mssg = temp['mssg']
                         reply_markup = temp['reply_keyboard_markup']
@@ -207,9 +214,9 @@ def func(update: Update, context: CallbackContext):
 
             # Add Order Button Pressed
             elif pressed_button.button_id == 14:
-                add_order_button(person=person, context=context, reply_markup=reply_markup)
+                AddOrder.add_order_button(person=person, context=context, reply_markup=reply_markup)
 
-    # Handle Non_Button Texts
+    # Handle Non_Button Texts---------------------------------------------------------------------------------
     else:
 
         # Initialize Progress Stage
@@ -223,51 +230,53 @@ def func(update: Update, context: CallbackContext):
         if person.person_last_button_id == 5:
             # Check user stage
             if progress['stage'] == 'AddPair_exchange':
-                add_pair_exchange(person=person, context=context, update=update)
+                AddPair.add_pair_exchange(person=person, context=context, update=update)
             # Check user stage
             if progress['stage'] == 'AddPair':
-                add_pair_confirmation(person=person, update=update, context=context)
+                AddPair.add_pair_confirmation(person=person, update=update, context=context)
             # Check user stage
             elif progress['stage'] == 'AddPair_Confirm':
                 # User confirms to add new pair
                 if update.effective_message.text == 'تأیید ✅':
-                    add_pair_confirmed(person=person, context=context)
+                    AddPair.add_pair_confirmed(person=person, context=context)
                 # User sent new base currency
                 else:
-                    add_base(person=person, update=update, context=context)
+                    AddPair.add_base(person=person, update=update, context=context)
 
         # Check person last pressed button
         elif person.person_last_button_id == 6:
             if progress['stage'] == 'DeletePair':
-                delete_pair_confirmation(person=person, update=update, context=context)
+                DeletePair.delete_pair_confirmation(person=person, update=update, context=context)
             elif progress['stage'] == 'DeletePair_Confirm':
                 # User confirms to delete the pair
                 if update.effective_message.text == 'تأیید ✅':
-                    delete_pair_confirmed(person=person, context=context)
+                    DeletePair.delete_pair_confirmed(person=person, context=context)
 
         # Check person last pressed button
         elif person.person_last_button_id == 11:
             if progress['stage'] == 'AddExchange_Name':
-                add_exchange_name(person, update, context)
+                AddExchange.add_exchange_name(person, update, context)
             elif progress['stage'] == 'AddExchange_API':
                 if progress['value']['exchange'] == 'KuCoin':
-                    add_exchange_kucoin(person, update, context)
+                    AddExchange.add_exchange_kucoin(person, update, context)
 
         elif person.person_last_button_id == 14:
             if progress['stage'] == 'AddOrder_exchange':
-                add_order_exchange(person, update, context)
+                AddOrder.add_order_exchange(person, update, context)
             elif progress['stage'] == 'AddOrder_currency':
-                add_order_currency(person, update, context)
+                AddOrder.add_order_currency(person, update, context)
             elif progress['stage'] == 'AddOrder_pair':
-                add_order_pair(person=person, context=context) if update.effective_message.text == 'تأیید ✅' else add_order_base(person, update, context)
+                AddOrder.add_order_pair(person=person,
+                                        context=context) if update.effective_message.text == 'تأیید ✅' else AddOrder.add_order_base(
+                    person, update, context)
             elif progress['stage'] == 'AddOrder_side':
-                add_order_side(person, update, context)
+                AddOrder.add_order_side(person, update, context)
             elif progress['stage'] == 'AddOrder_type':
-                add_order_type(person, update, context)
+                AddOrder.add_order_type(person, update, context)
             elif progress['stage'] == 'AddOrder_price':
-                add_order_price(person, update, context)
+                AddOrder.add_order_price(person, update, context)
             elif progress['stage'] == 'AddOrder_value':
-                add_order_value(person, update, context)
+                AddOrder.add_order_value(person, update, context)
 
         # Most default reaction for texts which is a simple error
         else:
@@ -275,7 +284,7 @@ def func(update: Update, context: CallbackContext):
             mssg = "پیام نامفهوم بود.\nلطفا یکی از گزینه های زیر را انتخاب کنید"
 
             # Create keyboard to be sent
-            button_array_array = get_button_array_array(person, person.person_last_button_id)
+            button_array_array = KeyboardFunctions.get_button_array_array(person, person.person_last_button_id)
             reply_markup = ReplyKeyboardMarkup(
                 keyboard=button_array_array, resize_keyboard=True, one_time_keyboard=False, selective=False)
 
@@ -295,8 +304,8 @@ def error(update, context):
 def main():
     """Start the bot."""
     updater = Updater(TOKEN, use_context=True)
-    dp = updater.dispatcher
-    dp.add_handler(MessageHandler(Filters.text, func))
+    dp: Dispatcher = updater.dispatcher
+    dp.add_handler(MessageHandler(Filters.text, func, run_async=True))
 
     # log all errors
     dp.add_error_handler(error)
