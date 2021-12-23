@@ -266,8 +266,8 @@ def func(update: Update, context: CallbackContext):
             elif progress['stage'] == 'AddOrder_currency':
                 AddOrder.add_order_currency(person, update, context)
             elif progress['stage'] == 'AddOrder_pair':
-                AddOrder.add_order_pair(person=person,
-                                        context=context) if update.effective_message.text == 'تأیید ✅' else AddOrder.add_order_base(
+                AddOrder.add_order_pair(person=person, context=context) \
+                    if update.effective_message.text == 'تأیید ✅' else AddOrder.add_order_base(
                     person, update, context)
             elif progress['stage'] == 'AddOrder_side':
                 AddOrder.add_order_side(person, update, context)
