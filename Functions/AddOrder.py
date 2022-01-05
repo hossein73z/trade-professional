@@ -517,7 +517,7 @@ def add_order_value(person: Person, update: Update, context: CallbackContext):
                f"*   جفت ارز: *{currency + '/' + base}" + '\n' + \
                f"*   قیمت: *{str(price)}" + '\n' + \
                f"*   مقدار: *{str(value)} {value_name}" + '\n' + \
-               f"ـ------------------------------" + '\n' + \
+               f"‏------------------------------" + '\n' + \
                f"قیمت لحظه ای این جفت ارز برابر {str(ticker['price'])} میباشد." + '\n' + \
                f"شما قصد دارید در {str(market_percent)} درصد {up_or_down} از قیمت بازار سفارش را قرار دهید." + '\n' + \
                f"در این سفارش {str(portfolio_percent)}  درصد کل {value_name} های شما " + \
